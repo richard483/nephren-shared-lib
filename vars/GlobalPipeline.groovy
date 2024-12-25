@@ -16,13 +16,9 @@ def call(String agentLabel, body) {
 
         node {
             stage('Echo Parameters') {
-                agent { label "${agentLabel}" }
-                steps {
-                    sh "env | sort"
-                    pipelineParams.each { key, value ->
-                        echo "${key}: ${value}"
-                    }
-                }
+                echo "Docker Image: ${DOCKER_IMAGE}"
+                echo "Container Name: ${CONTAINER_NAME}"
+                echo "App Port: ${APP_PORT}"
             }
             stages {
                 stage('Checkout Code') {
