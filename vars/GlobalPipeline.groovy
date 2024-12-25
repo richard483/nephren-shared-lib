@@ -32,7 +32,7 @@ def call(body) {
 
             stage('Removing Dangling Images') {
                 steps {
-                    removeDanglingImages()
+                    removingDanglingImage()
                 }
             }
         }
