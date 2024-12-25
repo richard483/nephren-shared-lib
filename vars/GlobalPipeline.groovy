@@ -4,6 +4,7 @@ def call(body) {
     body.resolveStrategy = Closure.DELEGATE_FIRST
     body.delegate = pipelineParams
     body()
+
     def DOCKER_IMAGE = pipelineParams.get('dockerImage')
     def CONTAINER_NAME = pipelineParams.get('projectName')
     def APP_PORT = pipelineParams.get('appPort')
