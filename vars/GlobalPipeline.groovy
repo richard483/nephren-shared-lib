@@ -26,8 +26,6 @@ def call(body) {
             stage('Deploy Application') {
                 steps {
                     stoppingAndRemovingContainer(CONTAINER_NAME)
-                }
-                steps {
                     runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE)
                 }
             }
