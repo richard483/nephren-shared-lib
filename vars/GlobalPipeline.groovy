@@ -1,9 +1,9 @@
-def call(Map pipelineParams) {
+def call(String agentLabel, body) {
 
-//    def pipelineParams = [:]
-//    body.resolveStrategy = Closure.DELEGATE_FIRST
-//    body.delegate = pipelineParams
-//    body()
+    def pipelineParams = [:]
+    body.resolveStrategy = Closure.DELEGATE_FIRST
+    body.delegate = pipelineParams
+    body()
 
     pipeline {
         agent any
@@ -15,6 +15,15 @@ def call(Map pipelineParams) {
         }
 
         node {
+            stage('Echo Parameters') {
+                agent { label "${agentLabel}" }
+                steps {
+                    sh "env | sort"
+                    pipelineParams.each { key, value ->
+                        echo "${key}: ${value}"
+                    }
+                }
+            }
             stages {
                 stage('Checkout Code') {
                     checkoutWithScm()
