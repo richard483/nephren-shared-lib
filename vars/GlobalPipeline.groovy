@@ -12,20 +12,30 @@ def call(body) {
         agent any
         stages {
             stage('Checkout Code') {
-                checkoutWithScm()
+                steps {
+                    checkoutWithScm()
+                }
             }
 
             stage('Build Docker Image') {
-                buildDockerImage(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
+                steps {
+                    buildDockerImage(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
+                }
             }
 
             stage('Deploy Application') {
-                stoppingAndRemovingContainer(CONTAINER_NAME)
-                runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE)
+                steps {
+                    stoppingAndRemovingContainer(CONTAINER_NAME)
+                }
+                steps {
+                    runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE)
+                }
             }
 
             stage('Removing Dangling Images') {
-                removeDanglingImages()
+                steps {
+                    removeDanglingImages()
+                }
             }
         }
         post {
