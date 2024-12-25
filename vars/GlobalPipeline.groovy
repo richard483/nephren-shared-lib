@@ -14,22 +14,24 @@ def call(body) {
             APP_PORT = pipelineParams.get('appPort')
         }
 
-        stages {
-            stage('Checkout Code') {
-                checkoutWithScm()
-            }
+        node {
+            stages {
+                stage('Checkout Code') {
+                    checkoutWithScm()
+                }
 
-            stage('Build Docker Image') {
-                buildDockerImage(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
-            }
+                stage('Build Docker Image') {
+                    buildDockerImage(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
+                }
 
-            stage('Deploy Application') {
-                stoppingAndRemovingContainer(CONTAINER_NAME)
-                runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE)
-            }
+                stage('Deploy Application') {
+                    stoppingAndRemovingContainer(CONTAINER_NAME)
+                    runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE)
+                }
 
-            stage('Removing Dangling Images') {
-                removeDanglingImages()
+                stage('Removing Dangling Images') {
+                    removeDanglingImages()
+                }
             }
         }
 
