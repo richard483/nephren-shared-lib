@@ -4,37 +4,30 @@ def call(body) {
     body.resolveStrategy = Closure.DELEGATE_FIRST
     body.delegate = pipelineParams
     body()
+    def DOCKER_IMAGE = pipelineParams.get('dockerImage')
+    def CONTAINER_NAME = pipelineParams.get('projectName')
+    def APP_PORT = pipelineParams.get('appPort')
 
     pipeline {
-        agent none
+        agent any
+        stages {
+            stage('Checkout Code') {
+                checkoutWithScm()
+            }
 
-        environment {
-            DOCKER_IMAGE = pipelineParams.get('dockerImage')
-            CONTAINER_NAME = pipelineParams.get('projectName')
-            APP_PORT = pipelineParams.get('appPort')
-        }
+            stage('Build Docker Image') {
+                buildDockerImage(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
+            }
 
-        node {
-            stages {
-                stage('Checkout Code') {
-                    checkoutWithScm()
-                }
+            stage('Deploy Application') {
+                stoppingAndRemovingContainer(CONTAINER_NAME)
+                runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE)
+            }
 
-                stage('Build Docker Image') {
-                    buildDockerImage(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
-                }
-
-                stage('Deploy Application') {
-                    stoppingAndRemovingContainer(CONTAINER_NAME)
-                    runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE)
-                }
-
-                stage('Removing Dangling Images') {
-                    removeDanglingImages()
-                }
+            stage('Removing Dangling Images') {
+                removeDanglingImages()
             }
         }
-
         post {
             success {
                 echo 'Pipeline succeeded!'
