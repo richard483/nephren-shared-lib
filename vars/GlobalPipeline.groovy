@@ -6,7 +6,7 @@ def call(body) {
     body()
 
     pipeline {
-        agent any
+        agent none
 
         environment {
             DOCKER_IMAGE = pipelineParams.get('dockerImage')
