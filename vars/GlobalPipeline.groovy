@@ -1,4 +1,4 @@
-def call(String agentLabel, body) {
+def call(body) {
 
     def pipelineParams = [:]
     body.resolveStrategy = Closure.DELEGATE_FIRST
@@ -15,11 +15,6 @@ def call(String agentLabel, body) {
         }
 
         node {
-            stage('Echo Parameters') {
-                echo "Docker Image: ${DOCKER_IMAGE}"
-                echo "Container Name: ${CONTAINER_NAME}"
-                echo "App Port: ${APP_PORT}"
-            }
             stages {
                 stage('Checkout Code') {
                     checkoutWithScm()
