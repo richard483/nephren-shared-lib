@@ -7,7 +7,7 @@ def call(String appPort, String containerName, String dockerImage, String envFil
         runCommand += " -p ${appPort}:${appPort}"
     }
 
-    if (envFile != null && envVars.isEmpty()) {
+    if (envFile != null && envFile.isEmpty()) {
         ENV_FILE = credentials(envFile)
         runCommand += " --env-file ${ENV_FILE}"
     }
