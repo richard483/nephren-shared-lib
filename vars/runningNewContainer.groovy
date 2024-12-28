@@ -16,7 +16,7 @@ def call(String appPort, String containerName, String dockerImage, String envFil
 
             sh "cat $secretFile"
             envContent = envContent.split("\n")
-            sh "cat ${envContent}"
+            sh "cat ${envContent.get(0)}"
 
         }
     }
