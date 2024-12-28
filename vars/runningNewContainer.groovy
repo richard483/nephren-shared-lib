@@ -16,7 +16,7 @@ def call(String appPort, String containerName, String dockerImage, String envFil
 
             envContent = envContent.split("\n")
             envContent.each { line ->
-                runCommand += " -e \"${line}\""
+                runCommand += " -e ${line}"
             }
 
         }
