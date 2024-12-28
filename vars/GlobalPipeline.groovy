@@ -8,6 +8,7 @@ def call(body) {
     def DOCKER_IMAGE = pipelineParams.get('dockerImage')
     def CONTAINER_NAME = pipelineParams.get('projectName')
     def APP_PORT = pipelineParams.get('appPort')
+    def ENV_FILE = pipelineParams.get('envFile')
 
     pipeline {
         agent any
@@ -27,7 +28,7 @@ def call(body) {
             stage('Deploy Application') {
                 steps {
                     stoppingAndRemovingContainer(CONTAINER_NAME)
-                    runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE)
+                    runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE, ENV_FILE)
                 }
             }
 
