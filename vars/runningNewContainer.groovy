@@ -12,4 +12,5 @@ def call(String appPort, String containerName, String dockerImage, String envFil
         runCommand += " --env-file ${ENV_FILE}"
     }
 
+    sh runCommand
 }
