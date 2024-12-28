@@ -9,10 +9,15 @@ def call(String appPort, String containerName, String dockerImage, String envFil
 
     if (envFile != null && !envFile.isEmpty()) {
         withCredentials([file(credentialsId: envFile, variable: 'secretFile')]) {
-            def envContent = readFile(file: secretFile)
-            envContent.eachLine { line ->
-                runCommand += " -e ${line}"
-            }
+            String envContent = sh(
+                    script: 'cat $secretFile',
+                    returnStdout: true
+            )
+
+            envContent = envContent.split("\n")
+            envContent.each { line ->
+                runCommand += " -e \"${line}\""
+
         }
     }
 
