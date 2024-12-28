@@ -12,13 +12,12 @@ def call(String appPort, String containerName, String dockerImage, String envFil
             String envContent = sh(
                     script: 'cat $secretFile',
                     returnStdout: true
-            )
+            ).trim()
 
-            sh "cat $secretFile"
             def envs = envContent.split("\n")
 
             envs.each { env ->
-                runCommand += " -e ${env}"
+                runCommand += " -e \"${env.trim()}\""
             }
         }
     }
