@@ -1,7 +1,7 @@
 def call(String appPort, String containerName, String dockerImage, String envFile) {
     echo 'Running new container...'
 
-    def runCommand = "docker run -d --name ${containerName} --restart unless-stopped ${dockerImage}"
+    def runCommand = "docker run -d"
 
     if (appPort != null && !appPort.isEmpty()) {
         runCommand += " -p ${appPort}:${appPort}"
@@ -22,6 +22,8 @@ def call(String appPort, String containerName, String dockerImage, String envFil
             }
         }
     }
+
+    runCommand += " --name ${containerName} ${dockerImage}"
 
     sh runCommand
 }
