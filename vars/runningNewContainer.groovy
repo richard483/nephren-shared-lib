@@ -8,8 +8,9 @@ def call(String appPort, String containerName, String dockerImage, String envFil
     }
 
     if (envFile != null && !envFile.isEmpty()) {
-        ENV_FILE = credentials(envFile)
-        sh "cat ${ENV_FILE}"
+        withCredentials([file(credentialsId: envFile, variable: 'secretFile')]) {
+            sh 'cat $secretFile'
+        }
     }
 
     sh runCommand
