@@ -9,6 +9,7 @@ def call(body) {
     def CONTAINER_NAME = pipelineParams.get('projectName')
     def APP_PORT = pipelineParams.get('appPort')
     def ENV_FILE = pipelineParams.get('envFile')
+    def NETWORK_NAME = pipelineParams.get('networkName')
 
     pipeline {
         agent any
@@ -28,6 +29,7 @@ def call(body) {
             stage('Deploy Application') {
                 steps {
                     stoppingAndRemovingContainer(CONTAINER_NAME)
+                    createDockerNetwork(NETWORK_NAME)
                     runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE, ENV_FILE)
                 }
             }
