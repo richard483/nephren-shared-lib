@@ -6,13 +6,13 @@ def call(String networkName) {
     }
 
     def networkExists = sh(
-            script: "docker network ls --filter name=^${NETWORK_NAME}\$ --format '{{.Name}}' | grep -q '^${NETWORK_NAME}\$'",
+            script: "docker network ls --filter name=^${networkName}\$ --format '{{.Name}}' | grep -q '^${networkName}\$'",
             returnStatus: true
     ) == 0
 
     if (!networkExists) {
-        sh "docker network create ${NETWORK_NAME}"
+        sh "docker network create ${networkName}"
     } else {
-        echo "Network ${NETWORK_NAME} already exists."
+        echo "Network ${networkName} already exists."
     }
 }
