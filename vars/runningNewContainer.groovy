@@ -26,7 +26,7 @@ def call(String appPort, String containerName, String dockerImage, String envFil
         }
     }
 
-    runCommand += " --name ${containerName} ${dockerImage}"
+    runCommand += " --restart unless-stopped --name ${containerName} ${dockerImage}"
 
     sh runCommand
 }
