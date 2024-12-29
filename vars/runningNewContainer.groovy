@@ -1,7 +1,11 @@
-def call(String appPort, String containerName, String dockerImage, String envFile) {
+def call(String appPort, String containerName, String dockerImage, String envFile, String networkName) {
     echo 'Running new container...'
 
     def runCommand = "docker run -d"
+
+    if (networkName != null && !networkName.isEmpty()) {
+        runCommand += " --net ${networkName}"
+    }
 
     if (appPort != null && !appPort.isEmpty()) {
         runCommand += " -p ${appPort}:${appPort}"

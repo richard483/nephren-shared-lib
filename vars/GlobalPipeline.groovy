@@ -30,7 +30,7 @@ def call(body) {
                 steps {
                     stoppingAndRemovingContainer(CONTAINER_NAME)
                     createDockerNetwork(NETWORK_NAME)
-                    runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE, ENV_FILE)
+                    runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE, ENV_FILE, NETWORK_NAME)
                 }
             }
 
