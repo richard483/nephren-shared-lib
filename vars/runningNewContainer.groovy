@@ -8,7 +8,7 @@ def call(String appPort, String containerName, String dockerImage, String envFil
     }
 
     if (appPort != null && !appPort.isEmpty()) {
-        runCommand += " -p ${appPort}:${appPort}"
+        runCommand += " -p 0.0.0.0:${appPort}:${appPort}"
     }
 
     if (envFile != null && !envFile.isEmpty()) {
