@@ -31,13 +31,12 @@ def call(body) {
                     // Create or update the ConfigMap
                     sh "kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -"
 
-                    // Deploy the application with the ConfigMap mounted
+                    // Deploy the application with the ConfigMap mounted and imagePullPolicy: Never
                     sh """
-                        kubectl create deployment ${CONTAINER_NAME} \
-                        --image=${DOCKER_IMAGE} \
-                        --dry-run=client -o yaml | \
-                        yq eval '.spec.template.spec.containers[0].imagePullPolicy = "Never"' - | \
-                        kubectl apply -f -
+                        kubectl create deployment ${CONTAINER_NAME} --image=${DOCKER_IMAGE} --dry-run=client -o yaml > deployment.yaml
+                        sed -i 's/        image: ${DOCKER_IMAGE}/        image: ${DOCKER_IMAGE}\\n        imagePullPolicy: Never/' deployment.yaml
+                        kubectl apply -f deployment.yaml
+                        rm deployment.yaml
                         kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
                     """
                     sh "kubectl expose deployment ${CONTAINER_NAME} --type=NodePort --port=${APP_PORT}"
