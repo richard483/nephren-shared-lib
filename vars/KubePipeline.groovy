@@ -28,6 +28,9 @@ def call(body) {
 
             stage('Deploy Application to Kubernetes') {
                 steps {
+                    // Delete the existing deployment and service
+                    sh "kubectl delete service ${CONTAINER_NAME} --ignore-not-found"
+
                     // Create or update the ConfigMap
                     sh "kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -"
 
