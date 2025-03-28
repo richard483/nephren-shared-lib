@@ -19,36 +19,31 @@ def call(body) {
                 }
             }
 
-            stage('Build Docker Image') {
+            stage('Build and Deploy to Kubernetes') {
                 steps {
-                    // Ensure we're using the Minikube Docker daemon
-                    sh 'eval $(minikube docker-env)'
-                    
-                    // Verify we're connected to the Minikube Docker daemon
-                    sh 'docker info | grep "Name:"'
-                    
-                    // Build the image
-                    buildDockerImage(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
-                    
-                    // List images to verify it was built successfully
-                    sh "docker images | grep ${DOCKER_IMAGE.split(':')[0]}"
-                }
-            }
-
-            stage('Deploy Application to Kubernetes') {
-                steps {
-                    // Ensure we're still using the Minikube Docker daemon
-                    sh 'eval $(minikube docker-env)'
-                    
-                    // Delete the existing deployment and service
-                    sh "kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found"
-                    sh "kubectl delete service ${CONTAINER_NAME} --ignore-not-found"
-
-                    // Create or update the ConfigMap
-                    sh "kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -"
-
-                    // Create a deployment with imagePullPolicy explicitly set to Never
+                    // Create a single shell script to ensure environment consistency
                     sh """
+                        # Explicitly set and verify Minikube Docker environment
+                        eval \$(minikube docker-env)
+                        echo "Current Docker context:"
+                        docker info | grep "Name:"
+                        
+                        # Build the image
+                        echo "Building image: ${DOCKER_IMAGE}"
+                        docker build -t ${DOCKER_IMAGE} .
+                        
+                        # Verify image exists
+                        echo "Verifying image exists:"
+                        docker images ${DOCKER_IMAGE} --format "{{.Repository}}:{{.Tag}}"
+                        
+                        # Delete existing resources
+                        kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found
+                        kubectl delete service ${CONTAINER_NAME} --ignore-not-found
+                        
+                        # Create ConfigMap
+                        kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -
+                        
+                        # Create deployment YAML
                         cat <<EOF > deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -73,11 +68,24 @@ spec:
         ports:
         - containerPort: ${APP_PORT}
 EOF
-                        kubectl apply -f deployment.yaml || (echo "Deployment failed, see deployment.yaml above for details" && exit 1)
-                        rm deployment.yaml
+                        
+                        # Debug: Show the YAML
+                        echo "Deployment YAML:"
+                        cat deployment.yaml
+                        
+                        # Apply the deployment
+                        kubectl apply -f deployment.yaml
+                        
+                        # Set environment variables from ConfigMap
                         kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
+                        
+                        # Create service
+                        kubectl expose deployment ${CONTAINER_NAME} --type=NodePort --port=${APP_PORT}
+                        
+                        # Verify pod status
+                        echo "Pod status:"
+                        kubectl get pods -l app=${CONTAINER_NAME}
                     """
-                    sh "kubectl expose deployment ${CONTAINER_NAME} --type=NodePort --port=${APP_PORT}"
                 }
             }
 
