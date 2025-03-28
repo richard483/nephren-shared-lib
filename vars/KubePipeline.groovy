@@ -29,12 +29,12 @@ def call(body) {
             stage('Deploy Application to Kubernetes') {
                 steps {
                     // Create or update the ConfigMap
-                    sh "kubectl create configmap ${CONFIGMAP_NAME}-config --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -"
+                    sh "kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -"
 
                     // Deploy the application with the ConfigMap mounted
                     sh """
                         kubectl create deployment ${CONTAINER_NAME} --image=${DOCKER_IMAGE} --dry-run=client -o yaml | kubectl apply -f -
-                        kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONFIGMAP_NAME}-config
+                        kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
                     """
                     sh "kubectl expose deployment ${CONTAINER_NAME} --type=NodePort --port=${APP_PORT}"
                 }
