@@ -81,6 +81,9 @@ EOF
                         
                         # Create service
                         kubectl expose deployment ${CONTAINER_NAME} --type=NodePort --port=${APP_PORT}
+
+                        # Set port forwarding
+                        kubectl port-forward service/${CONTAINER_NAME} ${APP_PORT}:${APP_PORT}
                         
                         # Verify pod status
                         echo "Pod status:"
