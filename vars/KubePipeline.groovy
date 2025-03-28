@@ -29,15 +29,38 @@ def call(body) {
             stage('Deploy Application to Kubernetes') {
                 steps {
                     // Delete the existing deployment and service
+                    sh "kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found"
                     sh "kubectl delete service ${CONTAINER_NAME} --ignore-not-found"
 
                     // Create or update the ConfigMap
                     sh "kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -"
 
-                    // Deploy the application with the ConfigMap mounted and imagePullPolicy: Never
+                    // Create a deployment with imagePullPolicy explicitly set to Never
                     sh """
-                        kubectl create deployment ${CONTAINER_NAME} --image=${DOCKER_IMAGE} --dry-run=client -o yaml > deployment.yaml
-                        sed -i 's/        image: ${DOCKER_IMAGE}/        image: ${DOCKER_IMAGE}\\n        imagePullPolicy: Never/' deployment.yaml
+                        cat <<EOF > deployment.yaml
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+            name: ${CONTAINER_NAME}
+            labels:
+                app: ${CONTAINER_NAME}
+            spec:
+            replicas: 1
+            selector:
+                matchLabels:
+                app: ${CONTAINER_NAME}
+            template:
+                metadata:
+                labels:
+                    app: ${CONTAINER_NAME}
+                spec:
+                containers:
+                - name: ${CONTAINER_NAME}
+                    image: ${DOCKER_IMAGE}
+                    imagePullPolicy: Never
+                    ports:
+                    - containerPort: ${APP_PORT}
+            EOF
                         kubectl apply -f deployment.yaml
                         rm deployment.yaml
                         kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
