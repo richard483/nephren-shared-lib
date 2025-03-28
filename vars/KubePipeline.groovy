@@ -119,18 +119,6 @@ EOF
                 }
             }
 
-            stage('Create Port Forward') {
-                steps {
-                    sh """
-                        # Start port forwarding in background and save PID
-                        echo "Starting port forwarding..."
-                        nohup kubectl port-forward service/${CONTAINER_NAME} ${APP_PORT}:${APP_PORT} > port-forward.log 2>&1 &
-                        echo \$! > port-forward.pid
-                        echo "Service accessible at http://localhost:${APP_PORT}"
-                    """
-                }
-            }
-
             stage('Removing Dangling Images') {
                 steps {
                     removingDanglingImage()
