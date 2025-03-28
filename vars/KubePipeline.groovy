@@ -8,7 +8,6 @@ def call(body) {
     def DOCKER_IMAGE = pipelineParams.get('dockerImage')
     def CONTAINER_NAME = pipelineParams.get('projectName')
     def APP_PORT = pipelineParams.get('appPort')
-    def ENV_FILE = pipelineParams.get('envFile')
     def NETWORK_NAME = pipelineParams.get('networkName')
 
     pipeline {
@@ -29,7 +28,14 @@ def call(body) {
 
             stage('Deploy Application to Kubernetes') {
                 steps {
-                    sh "kubectl create deployment ${CONTAINER_NAME} --image=${DOCKER_IMAGE}"
+                    // Create or update the ConfigMap
+                    sh "kubectl create configmap ${CONFIGMAP_NAME}-config --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -"
+
+                    // Deploy the application with the ConfigMap mounted
+                    sh """
+                        kubectl create deployment ${CONTAINER_NAME} --image=${DOCKER_IMAGE} --dry-run=client -o yaml | kubectl apply -f -
+                        kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONFIGMAP_NAME}-config
+                    """
                     sh "kubectl expose deployment ${CONTAINER_NAME} --type=NodePort --port=${APP_PORT}"
                 }
             }
