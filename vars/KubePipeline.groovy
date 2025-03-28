@@ -115,7 +115,7 @@ EOF
                         echo "Or run: minikube service ${CONTAINER_NAME}"
                         echo "Or run: kubectl port-forward service/${CONTAINER_NAME} ${APP_PORT}:${APP_PORT}"
                         echo "--------------------------------------"
-                        kubectl port-forward service/${CONTAINER_NAME} ${APP_PORT}:${APP_PORT}
+                        minikube service ${CONTAINER_NAME}
                     """
                 }
             }
