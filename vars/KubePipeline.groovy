@@ -93,47 +93,6 @@ EOF
                 }
             }
 
-            stage('Setup Ingress') {
-                steps {
-                    sh """
-                        # Enable ingress addon if not enabled
-                        minikube addons enable ingress
-                        
-                        # Create ingress resource
-                        cat <<EOF > ingress.yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ${CONTAINER_NAME}-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-  rules:
-  - host: ${CONTAINER_NAME}.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: ${CONTAINER_NAME}
-            port:
-              number: ${APP_PORT}
-EOF
-                        kubectl apply -f ingress.yaml
-                        
-                        # Get minikube IP
-                        MINIKUBE_IP=\$(minikube ip)
-                        
-                        echo "--------------------------------------"
-                        echo "Add this to your /etc/hosts file:"
-                        echo "\$MINIKUBE_IP ${CONTAINER_NAME}.local"
-                        echo "Then access at http://${CONTAINER_NAME}.local"
-                        echo "--------------------------------------"
-                    """
-                }
-            }
-
             stage('Access Information') {
                 steps {
                     sh """
@@ -156,6 +115,18 @@ EOF
                         echo "Or run: minikube service ${CONTAINER_NAME}"
                         echo "Or run: kubectl port-forward service/${CONTAINER_NAME} ${APP_PORT}:${APP_PORT}"
                         echo "--------------------------------------"
+                    """
+                }
+            }
+
+            stage('Create Port Forward') {
+                steps {
+                    sh """
+                        # Start port forwarding in background and save PID
+                        echo "Starting port forwarding..."
+                        nohup kubectl port-forward service/${CONTAINER_NAME} ${APP_PORT}:${APP_PORT} > port-forward.log 2>&1 &
+                        echo \$! > port-forward.pid
+                        echo "Service accessible at http://localhost:${APP_PORT}"
                     """
                 }
             }
