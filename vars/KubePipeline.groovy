@@ -81,13 +81,40 @@ EOF
                         
                         # Create service
                         kubectl expose deployment ${CONTAINER_NAME} --type=NodePort --port=${APP_PORT}
-
-                        # Set port forwarding
-                        kubectl port-forward service/${CONTAINER_NAME} ${APP_PORT}:${APP_PORT}
                         
                         # Verify pod status
                         echo "Pod status:"
                         kubectl get pods -l app=${CONTAINER_NAME}
+                        
+                        # Debug pod issues if not running
+                        echo "Checking for pod issues:"
+                        kubectl describe pods -l app=${CONTAINER_NAME}
+                    """
+                }
+            }
+
+            stage('Access Information') {
+                steps {
+                    sh """
+                        # Wait for pod to be ready (timeout after 60 seconds)
+                        echo "Waiting for pod to be ready..."
+                        kubectl wait --for=condition=ready pod -l app=${CONTAINER_NAME} --timeout=60s || true
+                        
+                        # Get service information
+                        echo "Service details:"
+                        kubectl get service ${CONTAINER_NAME}
+                        
+                        # Get NodePort
+                        NODE_PORT=\$(kubectl get service ${CONTAINER_NAME} -o jsonpath='{.spec.ports[0].nodePort}')
+                        
+                        # Get Minikube IP
+                        MINIKUBE_IP=\$(minikube ip)
+                        
+                        echo "--------------------------------------"
+                        echo "Service is accessible at: http://\$MINIKUBE_IP:\$NODE_PORT"
+                        echo "Or run: minikube service ${CONTAINER_NAME}"
+                        echo "Or run: kubectl port-forward service/${CONTAINER_NAME} ${APP_PORT}:${APP_PORT}"
+                        echo "--------------------------------------"
                     """
                 }
             }
