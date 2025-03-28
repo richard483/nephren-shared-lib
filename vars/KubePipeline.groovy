@@ -21,13 +21,25 @@ def call(body) {
 
             stage('Build Docker Image') {
                 steps {
+                    // Ensure we're using the Minikube Docker daemon
                     sh 'eval $(minikube docker-env)'
+                    
+                    // Verify we're connected to the Minikube Docker daemon
+                    sh 'docker info | grep "Name:"'
+                    
+                    // Build the image
                     buildDockerImage(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
+                    
+                    // List images to verify it was built successfully
+                    sh "docker images | grep ${DOCKER_IMAGE.split(':')[0]}"
                 }
             }
 
             stage('Deploy Application to Kubernetes') {
                 steps {
+                    // Ensure we're still using the Minikube Docker daemon
+                    sh 'eval $(minikube docker-env)'
+                    
                     // Delete the existing deployment and service
                     sh "kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found"
                     sh "kubectl delete service ${CONTAINER_NAME} --ignore-not-found"
@@ -35,7 +47,7 @@ def call(body) {
                     // Create or update the ConfigMap
                     sh "kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -"
 
-                    // Create a deployment with imagePullPolicy explicitly set to Never - with proper indentation
+                    // Create a deployment with imagePullPolicy explicitly set to Never
                     sh """
                         cat <<EOF > deployment.yaml
 apiVersion: apps/v1
@@ -61,7 +73,6 @@ spec:
         ports:
         - containerPort: ${APP_PORT}
 EOF
-                        cat deployment.yaml
                         kubectl apply -f deployment.yaml || (echo "Deployment failed, see deployment.yaml above for details" && exit 1)
                         rm deployment.yaml
                         kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
