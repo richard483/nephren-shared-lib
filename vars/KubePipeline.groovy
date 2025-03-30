@@ -96,7 +96,7 @@ EOF
                         kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
                         
                         # Create service
-                        kubectl expose deployment ${CONTAINER_NAME} --type=NodePort --port=${APP_PORT}
+                        // kubectl expose deployment ${CONTAINER_NAME} --type=NodePort --port=${APP_PORT}
                         
                         # Verify pod status
                         echo "Pod status:"
