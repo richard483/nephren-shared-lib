@@ -9,6 +9,8 @@ def call(body) {
     def CONTAINER_NAME = pipelineParams.get('projectName')
     def APP_PORT = pipelineParams.get('appPort')
     def NETWORK_NAME = pipelineParams.get('networkName')
+    def CLUSTER_IP= pipelineParams.get('clusterIP')
+    def CLUSTER_PORT= pipelineParams.get('clusterPort')
 
     pipeline {
         agent any
@@ -67,6 +69,20 @@ spec:
         imagePullPolicy: Never
         ports:
         - containerPort: ${APP_PORT}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${CONTAINER_NAME}
+spec:
+    type: NodePort
+    clusterIP: ${CLUSTER_IP}
+    selector:
+        app: ${CONTAINER_NAME}
+    ports:
+      - port: ${APP_PORT}
+        targetPort: ${APP_PORT}
+        nodePort: ${CLUSTER_PORT}
 EOF
                         
                         # Debug: Show the YAML
