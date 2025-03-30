@@ -95,9 +95,6 @@ EOF
                         # Set environment variables from ConfigMap
                         kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
                         
-                        # Create service
-                        // kubectl expose deployment ${CONTAINER_NAME} --type=NodePort --port=${APP_PORT}
-                        
                         # Verify pod status
                         echo "Pod status:"
                         kubectl get pods -l app=${CONTAINER_NAME}
