@@ -76,13 +76,21 @@ metadata:
   name: ${CONTAINER_NAME}
 spec:
     type: NodePort
-    clusterIP: ${CLUSTER_IP}
     selector:
         app: ${CONTAINER_NAME}
     ports:
       - port: ${APP_PORT}
         targetPort: ${APP_PORT}
         nodePort: ${CLUSTER_PORT}
+spec:
+    type: LoadBalancer
+    externalIPs:
+      - ${CLUSTER_IP}
+    selector:
+        app: ${CONTAINER_NAME}
+    ports:
+      - port: ${APP_PORT}
+        targetPort: ${APP_PORT}
 EOF
                         
                         # Debug: Show the YAML
