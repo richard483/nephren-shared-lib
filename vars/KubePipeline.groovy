@@ -42,7 +42,7 @@ def call(body) {
 
                         # Build the image
                         echo "Building image: ${DOCKER_IMAGE}"
-                        docker build $(kubectl get configmap nephren-ui-kube-config -o jsonpath='{.data}' | jq -r 'to_entries[] | "--build-arg \(.key)=\(.value)"' | tr '\n' ' ') -t ${DOCKER_IMAGE} .
+                        docker build \$(kubectl get configmap nephren-ui-kube-config -o jsonpath='{.data}' | jq -r 'to_entries[] | "--build-arg \(.key)=\(.value)"' | tr '\n' ' ') -t ${DOCKER_IMAGE} .
                         
                         # Verify image exists
                         echo "Verifying image exists:"
