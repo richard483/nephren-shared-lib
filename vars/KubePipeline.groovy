@@ -75,12 +75,14 @@ kind: Service
 metadata:
   name: ${CONTAINER_NAME}
 spec:
-    type: LoadBalancer
+    type: NodePort
+    clusterIP: ${CLUSTER_IP}
+    selector:
+        app: ${CONTAINER_NAME}
     ports:
       - port: ${APP_PORT}
         targetPort: ${APP_PORT}
-    selector:
-        app: ${CONTAINER_NAME}
+        nodePort: ${CLUSTER_PORT}
 EOF
                         
                         # Debug: Show the YAML
