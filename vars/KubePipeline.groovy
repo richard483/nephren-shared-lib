@@ -50,7 +50,7 @@ def call(body) {
 
                         # Create deployment YAML
                         cat <<EOF > deployment.yaml
-apiVersion: v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ${CONTAINER_NAME}
