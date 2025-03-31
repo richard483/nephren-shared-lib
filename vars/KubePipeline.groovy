@@ -40,11 +40,9 @@ def call(body) {
                         # Create Secret
                         kubectl create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -
 
-                        BUILD_ARGS=$(kubectl get configmap nephren-ui-kube-config -o jsonpath='{.data}' | jq -r 'to_entries[] | "--build-arg \(.key)=\(.value)"' | tr '\n' ' ')
-
                         # Build the image
                         echo "Building image: ${DOCKER_IMAGE}"
-                        docker build \$BUILD_ARGS -t ${DOCKER_IMAGE} .
+                        docker build $(kubectl get configmap nephren-ui-kube-config -o jsonpath='{.data}' | jq -r 'to_entries[] | "--build-arg \(.key)=\(.value)"' | tr '\n' ' ') -t ${DOCKER_IMAGE} .
                         
                         # Verify image exists
                         echo "Verifying image exists:"
