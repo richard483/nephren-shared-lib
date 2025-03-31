@@ -30,14 +30,6 @@ def call(body) {
                         echo "Current Docker context:"
                         docker info | grep "Name:"
                         
-                        # Build the image
-                        echo "Building image: ${DOCKER_IMAGE}"
-                        docker build -t ${DOCKER_IMAGE} .
-                        
-                        # Verify image exists
-                        echo "Verifying image exists:"
-                        docker images ${DOCKER_IMAGE} --format "{{.Repository}}:{{.Tag}}"
-                        
                         # Delete existing resources
                         kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found
                         kubectl delete service ${CONTAINER_NAME} --ignore-not-found
@@ -47,6 +39,16 @@ def call(body) {
                         
                         # Create Secret
                         kubectl create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -
+
+                        BUILD_ARGS=$(kubectl get configmap nephren-ui-kube-config -o jsonpath='{.data}' | jq -r 'to_entries[] | "--build-arg \(.key)=\(.value)"' | tr '\n' ' ')
+
+                        # Build the image
+                        echo "Building image: ${DOCKER_IMAGE}"
+                        docker build $BUILD_ARGS -t ${DOCKER_IMAGE} .
+                        
+                        # Verify image exists
+                        echo "Verifying image exists:"
+                        docker images ${DOCKER_IMAGE} --format "{{.Repository}}:{{.Tag}}"
 
                         # Create deployment YAML
                         cat <<EOF > deployment.yaml
@@ -70,11 +72,6 @@ spec:
       - name: ${CONTAINER_NAME}
         image: ${DOCKER_IMAGE}
         imagePullPolicy: Never
-        envFrom:
-        - configMapRef:
-          name: ${CONTAINER_NAME}-config
-        - secretRef:
-          name: ${CONTAINER_NAME}-secret
         ports:
         - containerPort: ${APP_PORT}
 ---
