@@ -72,9 +72,9 @@ spec:
         imagePullPolicy: Never
         envFrom:
         - configMapRef:
-          name: ${CONTAINER_NAME}-config
+            name: ${CONTAINER_NAME}-config
         - secretRef:
-          name: ${CONTAINER_NAME}-secret
+            name: ${CONTAINER_NAME}-secret
         ports:
         - containerPort: ${APP_PORT}
 ---
