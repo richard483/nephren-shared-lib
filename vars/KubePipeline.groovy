@@ -89,8 +89,6 @@ EOF
                         
                         # Apply the deployment
                         kubectl apply -f deployment.yaml
-
-                        minikube tunnel
                         
                         # Set environment variables from ConfigMap
                         kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
