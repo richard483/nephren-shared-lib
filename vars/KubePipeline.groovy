@@ -42,7 +42,7 @@ def call(body) {
 
                         # Build the image
                         echo "Building image: ${DOCKER_IMAGE}"
-                        docker build \$(kubectl get configmap nephren-ui-kube-config -o jsonpath='{.data}' | jq -r 'to_entries[] | "--build-arg '{.key}'='{.value}'"' | tr '\n' ' ') -t ${DOCKER_IMAGE} .
+                        docker build -t ${DOCKER_IMAGE} .
                         
                         # Verify image exists
                         echo "Verifying image exists:"
@@ -50,7 +50,7 @@ def call(body) {
 
                         # Create deployment YAML
                         cat <<EOF > deployment.yaml
-apiVersion: apps/v1
+apiVersion: v1
 kind: Deployment
 metadata:
   name: ${CONTAINER_NAME}
