@@ -44,7 +44,7 @@ def call(body) {
 
                         # Build the image
                         echo "Building image: ${DOCKER_IMAGE}"
-                        docker build $BUILD_ARGS -t ${DOCKER_IMAGE} .
+                        docker build \$BUILD_ARGS -t ${DOCKER_IMAGE} .
                         
                         # Verify image exists
                         echo "Verifying image exists:"
