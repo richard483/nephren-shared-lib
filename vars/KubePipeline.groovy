@@ -45,6 +45,9 @@ def call(body) {
                         # Create ConfigMap
                         kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -
                         
+                        # Create Secret
+                        kubectl create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -
+
                         # Create deployment YAML
                         cat <<EOF > deployment.yaml
 apiVersion: apps/v1
