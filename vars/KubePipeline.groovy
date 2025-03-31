@@ -77,7 +77,7 @@ metadata:
 spec:
     type: LoadBalancer
     ports:
-        - port: ${APP_PORT}
+      - port: ${APP_PORT}
         targetPort: ${APP_PORT}
     selector:
         app: ${CONTAINER_NAME}
