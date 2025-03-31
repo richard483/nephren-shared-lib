@@ -75,14 +75,12 @@ kind: Service
 metadata:
   name: ${CONTAINER_NAME}
 spec:
-    type: NodePort
-    clusterIP: ${CLUSTER_IP}
+    type: LoadBalancer
+    ports:
+        - port: ${APP_PORT}
+        targetPort: ${APP_PORT}
     selector:
         app: ${CONTAINER_NAME}
-    ports:
-      - port: ${APP_PORT}
-        targetPort: ${APP_PORT}
-        nodePort: ${CLUSTER_PORT}
 EOF
                         
                         # Debug: Show the YAML
@@ -91,6 +89,8 @@ EOF
                         
                         # Apply the deployment
                         kubectl apply -f deployment.yaml
+
+                        minikube tunnel
                         
                         # Set environment variables from ConfigMap
                         kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
