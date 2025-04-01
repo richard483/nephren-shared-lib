@@ -70,6 +70,11 @@ spec:
       - name: ${CONTAINER_NAME}
         image: ${DOCKER_IMAGE}
         imagePullPolicy: Never
+        envFrom:
+          - configMapRef:
+              name: ${CONTAINER_NAME}-config
+          - secretRef:
+              name: ${CONTAINER_NAME}-secret
         ports:
         - containerPort: ${APP_PORT}
 ---
