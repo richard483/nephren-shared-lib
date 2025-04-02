@@ -11,6 +11,7 @@ def call(body) {
     def NETWORK_NAME = pipelineParams.get('networkName')
     def CLUSTER_IP= pipelineParams.get('clusterIP')
     def CLUSTER_PORT= pipelineParams.get('clusterPort')
+    def builtImageCommand = getDockerImageBuildCommand(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
 
     pipeline {
         agent any
@@ -25,7 +26,7 @@ stage('Build and Deploy to Kubernetes') {
     steps {
         script {
             // Ensure consistent environment context
-            withEnv(["DOCKER_IMAGE=${DOCKER_IMAGE}, dockerImageBuildCommand=${getDockerImageBuildCommand(DOCKER_IMAGE, pipelineParams.get('buildArgs'))}"]) {
+            withEnv(["DOCKER_IMAGE=${DOCKER_IMAGE}"]) {
                 sh '''
                     # Set Minikube Docker environment
                     eval $(minikube docker-env)
@@ -33,7 +34,9 @@ stage('Build and Deploy to Kubernetes') {
                     docker info | grep "Name:"
                     
                     # Build image INSIDE Minikube's Docker context
-                    ${dockerImageBuildCommand}
+                    echo "Building Docker image..."
+                    ${builtImageCommand}
+
                     echo "Built images:"
                     docker images | grep "${DOCKER_IMAGE%:*}"
                     
