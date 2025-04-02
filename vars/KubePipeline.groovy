@@ -49,11 +49,11 @@ def call(body) {
                         kubectl create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -
 """
 
-                        # Build the image
+                        // Build the image
                         echo "Building image: ${DOCKER_IMAGE}"
                         sh dockerBuildCommand
                         
-                        # Verify image exists
+                        // Verify image exists
                         echo "Verifying image exists:"
                         sh "docker images ${DOCKER_IMAGE} --format \"{{.Repository}}:{{.Tag}}\""
 
