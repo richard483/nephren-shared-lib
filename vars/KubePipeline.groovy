@@ -11,7 +11,6 @@ def call(body) {
     def NETWORK_NAME = pipelineParams.get('networkName')
     def CLUSTER_IP= pipelineParams.get('clusterIP')
     def CLUSTER_PORT= pipelineParams.get('clusterPort')
-    def builtImageCommand = getDockerImageBuildCommand(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
 
     pipeline {
         agent any
