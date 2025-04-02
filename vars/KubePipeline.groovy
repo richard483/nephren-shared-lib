@@ -34,10 +34,7 @@ stage('Build and Deploy to Kubernetes') {
                     docker info | grep "Name:"
                     
                     # Build image INSIDE Minikube's Docker context
-                    echo "Building Docker image..."
-                    echo ${builtImageCommand}
-                    eval ${builtImageCommand}
-
+                    docker build -t ${DOCKER_IMAGE} .  # Add your build arguments here
                     echo "Built images:"
                     docker images | grep "${DOCKER_IMAGE%:*}"
                     
@@ -82,7 +79,7 @@ spec:
       containers:
       - name: ${CONTAINER_NAME}
         image: ${DOCKER_IMAGE}
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: IfNotPresent  # Changed from Never
         ports:
         - containerPort: ${APP_PORT}
         envFrom:
