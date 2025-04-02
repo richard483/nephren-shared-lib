@@ -23,14 +23,6 @@ def call(body) {
 
             stage('Build and Deploy to Kubernetes') {
                 steps {
-
-                    // Creating docker build script
-                    def dockerBuildCommand = "docker build -t ${dockerImage}"
-                    pipelineParams.get('buildArgs').each { key, value ->
-                        dockerBuildCommand += " --build-arg ${key}=${value}"
-                    }
-                    dockerBuildCommand += " ."
-
                     // Create a single shell script to ensure environment consistency
                     sh """
                         # Explicitly set and verify Minikube Docker environment
@@ -48,17 +40,14 @@ def call(body) {
                         # Create Secret
                         kubectl create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -
 """
-
-                        // Build the image
-                        echo "Building image: ${DOCKER_IMAGE}"
-                        sh dockerBuildCommand
+                    buildDockerImage(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
                         
-                        // Verify image exists
-                        echo "Verifying image exists:"
-                        sh "docker images ${DOCKER_IMAGE} --format \"{{.Repository}}:{{.Tag}}\""
+                    // Verify image exists
+                    echo "Verifying image exists:"
+                    sh "docker images ${DOCKER_IMAGE} --format \"{{.Repository}}:{{.Tag}}\""
 
                         
-                        sh """
+                    sh """
                         # Create deployment YAML
                         cat <<EOF > deployment.yaml
 apiVersion: apps/v1
