@@ -21,93 +21,96 @@ def call(body) {
                 }
             }
 
-            stage('Build and Deploy to Kubernetes') {
-                steps {
-                    // Create a single shell script to ensure environment consistency
-                    sh """
-                        # Explicitly set and verify Minikube Docker environment
-                        eval \$(minikube docker-env)
-                        echo "Current Docker context:"
-                        docker info | grep "Name:"
-                        
-                        # Delete existing resources
-                        kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found
-                        kubectl delete service ${CONTAINER_NAME} --ignore-not-found
-                        
-                        # Create ConfigMap
-                        kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -
-                        
-                        # Create Secret
-                        kubectl create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -
+stage('Build and Deploy to Kubernetes') {
+    steps {
+        script {
+            // Explicitly pass variables to shell context
+            def containerName = "${CONTAINER_NAME}"
+            def dockerImage = "${DOCKER_IMAGE}"
+            def appPort = "${APP_PORT}"
+            def clusterPort = "${CLUSTER_PORT}"
+            def clusterIP = "${CLUSTER_IP}"
 
-                        # Build the image
-                        echo "Building image: ${DOCKER_IMAGE}"
-                        docker build -t ${DOCKER_IMAGE} .
-                        
-                        # Verify image exists
-                        echo "Verifying image exists:"
-                        docker images ${DOCKER_IMAGE} --format "{{.Repository}}:{{.Tag}}"
+            sh """#!/bin/bash
+                # Debug: Show all variables
+                echo "CONTAINER_NAME: ${containerName}"
+                echo "DOCKER_IMAGE: ${dockerImage}"
+                echo "APP_PORT: ${appPort}"
+                echo "CLUSTER_PORT: ${clusterPort}"
+                echo "CLUSTER_IP: ${clusterIP}"
 
-                        # Create deployment YAML
-                        cat <<EOF > deployment.yaml
+                # Set Minikube Docker environment
+                eval \$(minikube docker-env)
+                
+                # Delete resources with proper variable substitution
+                kubectl delete deployment ${containerName} --ignore-not-found=true
+                kubectl delete service ${containerName} --ignore-not-found=true
+
+                # Create ConfigMap
+                kubectl create configmap ${containerName}-config \\
+                    --from-literal=key=value \\
+                    --dry-run=client -o yaml | kubectl apply -f -
+
+                # Create Secret
+                kubectl create secret generic ${containerName}-secret \\
+                    --from-literal=key=value \\
+                    --dry-run=client -o yaml | kubectl apply -f -
+
+                # Build Docker image
+                docker build -t ${dockerImage} .
+
+                # Generate deployment manifest
+                cat <<EOF > deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ${CONTAINER_NAME}
-  labels:
-    app: ${CONTAINER_NAME}
+  name: ${containerName}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ${CONTAINER_NAME}
+      app: ${containerName}
   template:
     metadata:
       labels:
-        app: ${CONTAINER_NAME}
+        app: ${containerName}
     spec:
       containers:
-      - name: ${CONTAINER_NAME}
-        image: ${DOCKER_IMAGE}
-        imagePullPolicy: Never
+      - name: ${containerName}
+        image: ${dockerImage}
+        imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: ${APP_PORT}
+        - containerPort: ${appPort}
+        envFrom:
+        - configMapRef:
+            name: ${containerName}-config
+        - secretRef:
+            name: ${containerName}-secret
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: ${CONTAINER_NAME}
+  name: ${containerName}
 spec:
-    type: NodePort
-    clusterIP: ${CLUSTER_IP}
-    selector:
-        app: ${CONTAINER_NAME}
-    ports:
-      - port: ${APP_PORT}
-        targetPort: ${APP_PORT}
-        nodePort: ${CLUSTER_PORT}
+  type: NodePort
+  clusterIP: ${clusterIP}
+  selector:
+    app: ${containerName}
+  ports:
+    - port: ${appPort}
+      targetPort: ${appPort}
+      nodePort: ${clusterPort}
 EOF
-                        
-                        # Debug: Show the YAML
-                        echo "Deployment YAML:"
-                        cat deployment.yaml
-                        
-                        # Apply the deployment
-                        kubectl apply -f deployment.yaml
-                        
-                        # Set environment variables from ConfigMap
-                        kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
-                        
-                        # Verify pod status
-                        echo "Pod status:"
-                        kubectl get pods -l app=${CONTAINER_NAME}
-                        
-                        # Debug pod issues if not running
-                        echo "Checking for pod issues:"
-                        kubectl describe pods -l app=${CONTAINER_NAME}
-                    """
-                }
-            }
+
+                # Apply deployment
+                kubectl apply -f deployment.yaml
+
+                # Verify deployment
+                kubectl rollout status deployment/${containerName}
+            """
+        }
+    }
+}
 
             stage('Access Information') {
                 steps {
