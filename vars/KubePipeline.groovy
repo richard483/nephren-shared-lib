@@ -35,7 +35,8 @@ stage('Build and Deploy to Kubernetes') {
                     
                     # Build image INSIDE Minikube's Docker context
                     echo "Building Docker image..."
-                    ${builtImageCommand}
+                    echo ${builtImageCommand}
+                    eval ${builtImageCommand}
 
                     echo "Built images:"
                     docker images | grep "${DOCKER_IMAGE%:*}"
