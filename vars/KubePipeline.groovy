@@ -121,11 +121,8 @@ EOF
                         # Get NodePort
                         NODE_PORT=\$(microk8s kubectl get service ${CONTAINER_NAME} -o jsonpath='{.spec.ports[0].nodePort}')
                         
-                        # Get Minikube IP
-                        MINIKUBE_IP=\$(microk8s ip)
-                        
                         echo "--------------------------------------"
-                        echo "Service is accessible at: http://\$MINIKUBE_IP:\$NODE_PORT"
+                        echo "Service is accessible at: http://host:\$NODE_PORT"
                         echo "Or run: minikube service ${CONTAINER_NAME}"
                         echo "Or run: microk8s kubectl port-forward service/${CONTAINER_NAME} ${APP_PORT}:${APP_PORT}"
                         echo "--------------------------------------"
