@@ -68,7 +68,7 @@ spec:
     spec:
       containers:
       - name: ${CONTAINER_NAME}
-        image: ${DOCKER_IMAGE}
+        image: localhost:32000/${DOCKER_IMAGE}
         imagePullPolicy: Never
         ports:
         - containerPort: ${APP_PORT}
