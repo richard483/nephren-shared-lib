@@ -40,15 +40,13 @@ def call(body) {
 
                         # Build the image
                         echo "Building image: ${DOCKER_IMAGE}"
-                        docker build -t ${DOCKER_IMAGE} .
+                        docker build . -t localhost:32000/${DOCKER_IMAGE}
                         
                         # Verify image exists
                         echo "Verifying image exists:"
                         docker images ${DOCKER_IMAGE} --format "{{.Repository}}:{{.Tag}}"
 
-                        docker save ${DOCKER_IMAGE} > ${DOCKER_IMAGE}.tar
-
-                        microk8s ctr image import ${DOCKER_IMAGE}.tar
+                        docker push localhost:32000/${DOCKER_IMAGE}
 
                         # Create deployment YAML
                         cat <<EOF > deployment.yaml
