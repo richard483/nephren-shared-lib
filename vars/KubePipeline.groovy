@@ -25,20 +25,18 @@ def call(body) {
                 steps {
                     // Create a single shell script to ensure environment consistency
                     sh """
-                        # Explicitly set and verify Minikube Docker environment
-                        eval \$(minikube docker-env)
                         echo "Current Docker context:"
                         docker info | grep "Name:"
                         
                         # Delete existing resources
-                        kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found
-                        kubectl delete service ${CONTAINER_NAME} --ignore-not-found
+                        microk8s kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found
+                        microk8s kubectl delete service ${CONTAINER_NAME} --ignore-not-found
                         
                         # Create ConfigMap
-                        kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -
+                        microk8s kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | microk8s kubectl apply -f -
                         
                         # Create Secret
-                        kubectl create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | kubectl apply -f -
+                        microk8s kubectl create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | microk8s kubectl apply -f -
 
                         # Build the image
                         echo "Building image: ${DOCKER_IMAGE}"
@@ -93,18 +91,18 @@ EOF
                         cat deployment.yaml
                         
                         # Apply the deployment
-                        kubectl apply -f deployment.yaml
+                        microk8s kubectl apply -f deployment.yaml
                         
                         # Set environment variables from ConfigMap
-                        kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
+                        microk8s kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
                         
                         # Verify pod status
                         echo "Pod status:"
-                        kubectl get pods -l app=${CONTAINER_NAME}
+                        microk8s kubectl get pods -l app=${CONTAINER_NAME}
                         
                         # Debug pod issues if not running
                         echo "Checking for pod issues:"
-                        kubectl describe pods -l app=${CONTAINER_NAME}
+                        microk8s kubectl describe pods -l app=${CONTAINER_NAME}
                     """
                 }
             }
@@ -114,22 +112,22 @@ EOF
                     sh """
                         # Wait for pod to be ready (timeout after 60 seconds)
                         echo "Waiting for pod to be ready..."
-                        kubectl wait --for=condition=ready pod -l app=${CONTAINER_NAME} --timeout=60s || true
+                        microk8s kubectl wait --for=condition=ready pod -l app=${CONTAINER_NAME} --timeout=60s || true
                         
                         # Get service information
                         echo "Service details:"
-                        kubectl get service ${CONTAINER_NAME}
+                        microk8s kubectl get service ${CONTAINER_NAME}
                         
                         # Get NodePort
-                        NODE_PORT=\$(kubectl get service ${CONTAINER_NAME} -o jsonpath='{.spec.ports[0].nodePort}')
+                        NODE_PORT=\$(microk8s kubectl get service ${CONTAINER_NAME} -o jsonpath='{.spec.ports[0].nodePort}')
                         
                         # Get Minikube IP
-                        MINIKUBE_IP=\$(minikube ip)
+                        MINIKUBE_IP=\$(microk8s ip)
                         
                         echo "--------------------------------------"
                         echo "Service is accessible at: http://\$MINIKUBE_IP:\$NODE_PORT"
                         echo "Or run: minikube service ${CONTAINER_NAME}"
-                        echo "Or run: kubectl port-forward service/${CONTAINER_NAME} ${APP_PORT}:${APP_PORT}"
+                        echo "Or run: microk8s kubectl port-forward service/${CONTAINER_NAME} ${APP_PORT}:${APP_PORT}"
                         echo "--------------------------------------"
                     """
                 }
