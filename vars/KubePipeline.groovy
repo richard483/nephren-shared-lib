@@ -46,6 +46,10 @@ def call(body) {
                         echo "Verifying image exists:"
                         docker images ${DOCKER_IMAGE} --format "{{.Repository}}:{{.Tag}}"
 
+                        docker save ${DOCKER_IMAGE} > ${DOCKER_IMAGE}.tar
+
+                        microk8s ctr image import ${DOCKER_IMAGE}.tar
+
                         # Create deployment YAML
                         cat <<EOF > deployment.yaml
 apiVersion: apps/v1
