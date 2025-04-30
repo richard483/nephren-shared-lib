@@ -21,26 +21,19 @@ def call(body) {
                 }
             }
 
-            stage('Build and Deploy to Kubernetes') {
+            stage('Build Docker Image') {
+                steps {
+                    sh "echo \"Building image: ${DOCKER_IMAGE}\""
+                    buildDockerImage('localhost:32000/' + DOCKER_IMAGE, pipelineParams.get('buildArgs'))
+                }
+            }
+
+            stage('Deploy to Kubernetes') {
                 steps {
                     // Create a single shell script to ensure environment consistency
                     sh """
                         echo "Current Docker context:"
                         docker info | grep "Name:"
-                        
-                        # Delete existing resources
-                        microk8s kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found
-                        microk8s kubectl delete service ${CONTAINER_NAME} --ignore-not-found
-                        
-                        # Create ConfigMap
-                        microk8s kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | microk8s kubectl apply -f -
-                        
-                        # Create Secret
-                        microk8s kubectl create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | microk8s kubectl apply -f -
-
-                        # Build the image
-                        echo "Building image: ${DOCKER_IMAGE}"
-                        docker build . -t localhost:32000/${DOCKER_IMAGE}
                         
                         # Verify image exists
                         echo "Verifying image exists:"
@@ -87,6 +80,16 @@ spec:
         targetPort: ${APP_PORT}
         nodePort: ${CLUSTER_PORT}
 EOF
+
+                        # Delete existing resources
+                        microk8s kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found
+                        microk8s kubectl delete service ${CONTAINER_NAME} --ignore-not-found
+                        
+                        # Create ConfigMap
+                        microk8s kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | microk8s kubectl apply -f -
+                        
+                        # Create Secret
+                        microk8s kubectl create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | microk8s kubectl apply -f -
                         
                         # Debug: Show the YAML
                         echo "Deployment YAML:"
