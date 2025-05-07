@@ -70,15 +70,15 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ${CONTAINER_NAME}
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: ${CLUSTER_IP}
 spec:
-    type: NodePort
-    clusterIP: ${CLUSTER_IP}
+    type: LoadBalancer
     selector:
         app: ${CONTAINER_NAME}
     ports:
       - port: ${APP_PORT}
         targetPort: ${APP_PORT}
-        nodePort: ${CLUSTER_PORT}
 EOF
 
                         # Delete existing resources
