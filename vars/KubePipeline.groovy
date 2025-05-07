@@ -10,7 +10,6 @@ def call(body) {
     def APP_PORT = pipelineParams.get('appPort')
     def NETWORK_NAME = pipelineParams.get('networkName')
     def CLUSTER_IP= pipelineParams.get('clusterIP')
-    def CLUSTER_PORT= pipelineParams.get('clusterPort')
 
     pipeline {
         agent any
