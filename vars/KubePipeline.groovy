@@ -8,8 +8,7 @@ def call(body) {
     def DOCKER_IMAGE = pipelineParams.get('dockerImage')
     def CONTAINER_NAME = pipelineParams.get('projectName')
     def APP_PORT = pipelineParams.get('appPort')
-    def NETWORK_NAME = pipelineParams.get('networkName')
-    def CLUSTER_IP= pipelineParams.get('clusterIP')
+    def EXTERNAL_ENDPOINTS_IP= pipelineParams.get('externalEndpointsIp')
 
     pipeline {
         agent any
@@ -70,7 +69,7 @@ kind: Service
 metadata:
   name: ${CONTAINER_NAME}
   annotations:
-    metallb.universe.tf/loadBalancerIPs: ${CLUSTER_IP}
+    metallb.universe.tf/loadBalancerIPs: ${EXTERNAL_ENDPOINTS_IP}
 spec:
     type: LoadBalancer
     selector:
