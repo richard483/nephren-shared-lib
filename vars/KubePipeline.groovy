@@ -22,62 +22,20 @@ def call(body) {
                 steps {
                     sh "echo \"Building image: ${DOCKER_IMAGE}\""
                     buildDockerImage('localhost:32000/' + DOCKER_IMAGE, pipelineParams.get('buildArgs'))
-                }
-            }
-
-            stage('Deploy to Kubernetes') {
-                steps {
-                    // Create a single shell script to ensure environment consistency
                     sh """
-                        echo "Current Docker context:"
-                        docker info | grep "Name:"
-
                         # Verify image exists
                         echo "Verifying image exists:"
                         docker images ${DOCKER_IMAGE} --format "{{.Repository}}:{{.Tag}}"
 
                         docker push localhost:32000/${DOCKER_IMAGE}
+                        """
+                }
+            }
 
-                        # Create deployment YAML
-                        cat <<EOF > deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ${CONTAINER_NAME}
-  labels:
-    app: ${CONTAINER_NAME}
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: ${CONTAINER_NAME}
-  template:
-    metadata:
-      labels:
-        app: ${CONTAINER_NAME}
-    spec:
-      containers:
-      - name: ${CONTAINER_NAME}
-        image: localhost:32000/${DOCKER_IMAGE}
-        imagePullPolicy: Always
-        ports:
-        - containerPort: ${APP_PORT}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ${CONTAINER_NAME}
-  annotations:
-    metallb.universe.tf/loadBalancerIPs: ${EXTERNAL_ENDPOINTS_IP}
-spec:
-    type: LoadBalancer
-    selector:
-        app: ${CONTAINER_NAME}
-    ports:
-      - port: ${APP_PORT}
-        targetPort: ${APP_PORT}
-EOF
-
+            stage('Deploy to Kubernetes') {
+                steps {
+                    prepareKubernetesDeployment(CONTAINER_NAME, DOCKER_IMAGE, APP_PORT, EXTERNAL_ENDPOINTS_IP)
+                    sh """
                         # Delete existing resources
                         microk8s kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found
                         microk8s kubectl delete service ${CONTAINER_NAME} --ignore-not-found
@@ -95,7 +53,7 @@ EOF
                         # Apply the deployment
                         microk8s kubectl apply -f deployment.yaml
 
-                        # Set environment variables from ConfigMap
+                        # Bind environment variables from ConfigMap to the deployment
                         microk8s kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
 
                         # Verify pod status
@@ -120,13 +78,10 @@ EOF
                         echo "Service details:"
                         microk8s kubectl get service ${CONTAINER_NAME}
 
-                        # Get NodePort
-                        NODE_PORT=\$(microk8s kubectl get service ${CONTAINER_NAME} -o jsonpath='{.spec.ports[0].nodePort}')
+                        CLUSTER_IP=\$(microk8s kubectl get service ${CONTAINER_NAME} -o jsonpath='{.spec.ports[0].clusterIP}')
 
                         echo "--------------------------------------"
-                        echo "Service is accessible at: http://host:\$NODE_PORT"
-                        echo "Or run: minikube service ${CONTAINER_NAME}"
-                        echo "Or run: microk8s kubectl port-forward service/${CONTAINER_NAME} ${APP_PORT}:${APP_PORT}"
+                        echo "Service is accessible at: \${CLUSTER_IP}"
                         echo "--------------------------------------"
                     """
                 }
