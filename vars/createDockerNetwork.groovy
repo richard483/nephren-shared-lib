@@ -1,7 +1,6 @@
 def call(String networkName) {
-
     if (networkName == null || networkName.isEmpty()) {
-        echo "No network name provided. Skipping network creation."
+        echo 'No network name provided. Skipping network creation.'
         return
     }
 

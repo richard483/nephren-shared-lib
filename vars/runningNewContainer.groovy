@@ -1,7 +1,7 @@
 def call(String appPort, String containerName, String dockerImage, String envFile, String networkName) {
     echo 'Running new container...'
 
-    def runCommand = "docker run -d"
+    def runCommand = 'docker run -d'
 
     if (networkName != null && !networkName.isEmpty()) {
         runCommand += " --net ${networkName}"
@@ -18,7 +18,7 @@ def call(String appPort, String containerName, String dockerImage, String envFil
                     returnStdout: true
             ).trim()
 
-            def envs = envContent.split("\n")
+            def envs = envContent.split('\n')
 
             envs.each { env ->
                 runCommand += " -e \"${env.trim()}\""
