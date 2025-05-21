@@ -77,12 +77,6 @@ def call(body) {
                         # Get service information
                         echo "Service details:"
                         microk8s kubectl get service ${CONTAINER_NAME}
-
-                        CLUSTER_IP=\$(microk8s kubectl get service ${CONTAINER_NAME} -o jsonpath='{.spec.ports[0].clusterIP}')
-
-                        echo "--------------------------------------"
-                        echo "Service is accessible at: \${CLUSTER_IP}"
-                        echo "--------------------------------------"
                     """
                 }
             }
