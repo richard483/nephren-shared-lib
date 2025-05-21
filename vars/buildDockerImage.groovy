@@ -6,7 +6,7 @@ def call(String dockerImage, Map args) {
         dockerBuildCommand += " --build-arg ${key}=${value}"
     }
 
-    dockerBuildCommand += " ."
+    dockerBuildCommand += ' .'
 
     sh dockerBuildCommand
 }
