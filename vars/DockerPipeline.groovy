@@ -1,3 +1,5 @@
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 def call(body) {
     def pipelineParams = [:]
     body.resolveStrategy = Closure.DELEGATE_FIRST
@@ -27,19 +29,22 @@ def call(body) {
                         if (APP_TYPE == 'maven') {
                             echo "Detected Maven project. Incrementing version..."
 
-                            def rawOutput = sh(
-                                script: 'mvn -B help:evaluate -Dexpression=project.version -q -DforceStdout', 
-                                returnStdout: true
-                            ).trim()
-                            
-                            // FIXED: Use Groovy's find operator =~ instead of Matcher
-                            String projectVersion = (rawOutput =~ /\d+\.\d+\.\d+([.-][A-Za-z0-9]+)?/)?.find() ? it[0] : null
-                            
-                            if (!projectVersion) {
-                                error "Could not extract valid version from: '${rawOutput}'"
+                        def rawOutput = sh(script: 'mvn -B help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
+                            String projectVersion = ""
+                            // This regex looks for patterns like X.Y.Z, X.Y.Z-SNAPSHOT, X.Y.Z.RC1, etc.
+                            Pattern versionPattern = Pattern.compile("(\\d+\\.\\d+\\.\\d+([.-][A-Za-z0-9]+)*)")
+                            Matcher matcher = versionPattern.matcher(rawOutput)
+
+                            if (matcher.find()) {
+                                projectVersion = matcher.group(1)
+                            }
+
+                            echo "2. Version extracted by regex: '${projectVersion}'"
+
+                            if (projectVersion.isEmpty()) {
+                                error "Could not extract a valid version string from raw output: '${rawOutput}'"
                             }
                             
-                            echo "Extracted version: '${projectVersion}'"
                             sh "mvn versions:set -DnewVersion=${projectVersion} -DgenerateBackupPoms=false"
                             echo "Project version updated to ${projectVersion} in pom.xml"
 
