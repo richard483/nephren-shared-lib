@@ -50,7 +50,7 @@ def call(body) {
                                 sh 'git config --global user.name "richard483"'
                                 sh 'git add pom.xml'
                                 sh "git commit -m 'JENKINS: Bump version to ${newVersion}'"
-                                sh 'git push origin main'
+                                sh 'git push origin HEAD:main'
                             }
                         } 
                     }
