@@ -25,19 +25,50 @@ def call(body) {
                     script {
                         if (APP_TYPE == 'maven') {
                             echo "Detected Maven project. Incrementing version..."
-                            def rawProjectVersion = sh(script: 'mvn -B help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
-                            // Now, check if rawProjectVersion still contains ANSI codes.
-                            // If -B solves it, rawProjectVersion should be clean.
-                            echo "Raw project version (after -B): ${rawProjectVersion}"
 
-                            // If -B is not enough, you'll need to strip the codes (see option 2)
-                            def projectVersion = rawProjectVersion.replaceAll(/\u001B\[[;?\d]*[mGK]/, "") // General ANSI code stripping
-                            echo "Current project version: ${projectVersion}"
+                        def rawOutput = sh(script: 'mvn -B help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
+                        echo "1. Raw output from mvn: '${rawOutput}'"
+                        // Optional: Print bytes to see hidden characters
+                        // echo "Raw output bytes: ${rawOutput.bytes.collect { String.format("%02X", it) }.join(' ')}"
 
-                            def (major, minor, patch) = projectVersion.tokenize('.')
+                        // Attempt to clean ANSI SGR codes (like color codes)
+                        // \x1B is ESC, \[ is literal [, [0-9;]* matches zero or more digits or semicolons, m is the terminator for SGR codes.
+                        def projectVersion = rawOutput.replaceAll(/\x1B\[[0-9;]*m/, "")
+                        echo "2. Project version after SGR cleaning: '${projectVersion}'"
 
-                            def newPatch = patch.toInteger() + 1
-                            def newVersion = "${major}.${minor}.${newPatch}"
+                        // As a fallback, if the above isn't enough, try a more general ANSI code regex.
+                        // This one looks for ESC [ followed by any parameters and a letter.
+                        // Use this if "Attempt 1" still shows problems.
+                        // projectVersion = projectVersion.replaceAll(/\u001B\[[;?\d]*[A-Za-z]/, "")
+                        // echo "2b. Project version after general ANSI cleaning: '${projectVersion}'"
+
+
+                        // Validate that the version string looks like a version now
+                        if (!projectVersion.matches("^\\d+\\.\\d+\\.\\d+.*\$")) { // Allows for -SNAPSHOT etc. at the end
+                            error "Cleaned project version '${projectVersion}' does not look like a valid version string. Raw was: '${rawOutput}'"
+                        }
+                        echo "3. Final project version for tokenization: '${projectVersion}'"
+
+
+                        def versionParts = projectVersion.tokenize('-')
+                        def baseVersion = versionParts[0]
+                        def snapshotSuffix = versionParts.size() > 1 ? "-${versionParts[1]}" : ""
+
+                        def (major, minor, patch) = baseVersion.tokenize('.')
+                        // Ensure major, minor, patch are clean numbers
+                        if (!major.isNumber() || !minor.isNumber() || !patch.isNumber()) {
+                            error "Failed to parse major/minor/patch from baseVersion '${baseVersion}'. Original projectVersion was '${projectVersion}'"
+                        }
+
+                        def newPatch = patch.toInteger() + 1
+                        def newVersion = "${major}.${minor}.${newPatch}${snapshotSuffix}"
+
+                        echo "4. New project version calculated: '${newVersion}'" // Echo with quotes
+
+                        // CRITICAL: newVersion MUST be clean before setting it in pom.xml
+                        if (newVersion.contains("\u001B")) { // Check for any remaining ESC character
+                            error "FATAL: Calculated newVersion '${newVersion}' still contains ANSI escape codes!"
+                        }
 
                             echo "New project version will be: ${newVersion}"
 
