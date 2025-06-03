@@ -33,7 +33,7 @@ def call(body) {
                             ).trim()
                             
                             // FIXED: Use Groovy's find operator =~ instead of Matcher
-                            String projectVersion = (rawOutput =~ /\d+\.\d+\.\d+([.-][A-Za-z0-9]+)?/)?[0]
+                            String projectVersion = (rawOutput =~ /\d+\.\d+\.\d+([.-][A-Za-z0-9]+)?/)?.find() ? it[0] : null
                             
                             if (!projectVersion) {
                                 error "Could not extract valid version from: '${rawOutput}'"
