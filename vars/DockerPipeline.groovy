@@ -24,7 +24,14 @@ def call(body) {
                 steps {
                     script {
                         if (APP_TYPE == 'maven') {
-                            def projectVersion = sh(script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
+                            echo "Detected Maven project. Incrementing version..."
+                            def rawProjectVersion = sh(script: 'mvn -B help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
+                            // Now, check if rawProjectVersion still contains ANSI codes.
+                            // If -B solves it, rawProjectVersion should be clean.
+                            echo "Raw project version (after -B): ${rawProjectVersion}"
+
+                            // If -B is not enough, you'll need to strip the codes (see option 2)
+                            def projectVersion = rawProjectVersion.replaceAll(/\u001B\[[;?\d]*[mGK]/, "") // General ANSI code stripping
                             echo "Current project version: ${projectVersion}"
 
                             def (major, minor, patch) = projectVersion.tokenize('.')
