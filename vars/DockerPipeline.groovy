@@ -28,15 +28,19 @@ def call(body) {
 
                         if (APP_TYPE == 'maven') {
                             echo "Detected Maven project. Incrementing version..."
+                            def rawOutput = sh(script: 'mvn -B help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
+                            echo "1. Raw output from mvn: '${rawOutput}'"
+                            // For deeper debugging of rawOutput if needed later:
+                            // echo "Raw output bytes: ${rawOutput.bytes.collect { String.format('%02X', it) }.join(' ')}"
 
-                        def rawOutput = sh(script: 'mvn -B help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
+                            // --- Strategy: Extract the version string directly ---
                             String projectVersion = ""
                             // This regex looks for patterns like X.Y.Z, X.Y.Z-SNAPSHOT, X.Y.Z.RC1, etc.
                             Pattern versionPattern = Pattern.compile("(\\d+\\.\\d+\\.\\d+([.-][A-Za-z0-9]+)*)")
                             Matcher matcher = versionPattern.matcher(rawOutput)
 
                             if (matcher.find()) {
-                                projectVersion = matcher.group(1)
+                                projectVersion = matcher.group(1) // group(1) gets the main captured version string
                             }
 
                             echo "2. Version extracted by regex: '${projectVersion}'"
@@ -44,9 +48,34 @@ def call(body) {
                             if (projectVersion.isEmpty()) {
                                 error "Could not extract a valid version string from raw output: '${rawOutput}'"
                             }
-                            
-                            sh "mvn versions:set -DnewVersion=${projectVersion} -DgenerateBackupPoms=false"
-                            echo "Project version updated to ${projectVersion} in pom.xml"
+                            echo "3. Final project version for tokenization: '${projectVersion}'"
+
+                            // --- The rest of your logic should now work with a clean projectVersion ---
+                            def versionParts = projectVersion.tokenize('-')
+                            def baseVersion = versionParts[0]
+                            def snapshotSuffix = versionParts.size() > 1 ? "-${versionParts[1]}" : ""
+
+                            // Double-check baseVersion before tokenizing by '.'
+                            if (!baseVersion.matches("^\\d+\\.\\d+\\.\\d+\$")) {
+                                error "Extracted base version '${baseVersion}' is not in X.Y.Z format. Full extracted version was '${projectVersion}'"
+                            }
+                            def (major, minor, patch) = baseVersion.tokenize('.')
+
+                            if (!major.isNumber() || !minor.isNumber() || !patch.isNumber()) {
+                                error "Failed to parse major/minor/patch from baseVersion '${baseVersion}'. Original projectVersion was '${projectVersion}'"
+                            }
+
+                            def newPatch = patch.toInteger() + 1
+                            def newVersion = "${major}.${minor}.${newPatch}${snapshotSuffix}"
+
+                            echo "4. New project version calculated: '${newVersion}'"
+
+                            if (newVersion.contains("\u001B")) {
+                                error "FATAL: Calculated newVersion '${newVersion}' still contains ANSI escape codes after extraction strategy!"
+                            }
+
+                            sh "mvn versions:set -DnewVersion=${newVersion} -DgenerateBackupPoms=false"
+                            echo "Project version updated to ${newVersion} in pom.xml"
 
                             def branch_name = env.BRANCH_NAME
                             if (branch_name == null || branch_name.isEmpty()) {
