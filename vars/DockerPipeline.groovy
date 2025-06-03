@@ -24,7 +24,6 @@ def call(body) {
                 steps {
                     script {
                         if (APP_TYPE == 'maven') {
-                            sh 'mvn clean package -DskipTests'
                             def projectVersion = sh(script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
                             echo "Current project version: ${projectVersion}"
 
