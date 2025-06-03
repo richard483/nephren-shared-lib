@@ -22,31 +22,30 @@ def call(body) {
 
             stage('Increment Version') {
                 steps {
-                    if (APP_TYPE == 'maven') {
-                        sh 'mvn clean package -DskipTests'
-                        def projectVersion = sh(script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
-                        echo "Current project version: ${projectVersion}"
+                    script {
+                        if (APP_TYPE == 'maven') {
+                            sh 'mvn clean package -DskipTests'
+                            def projectVersion = sh(script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
+                            echo "Current project version: ${projectVersion}"
 
-                        def (major, minor, patch) = projectVersion.tokenize('.')
+                            def (major, minor, patch) = projectVersion.tokenize('.')
 
-                        def newPatch = patch.toInteger() + 1
-                        def newVersion = "${major}.${minor}.${newPatch}"
+                            def newPatch = patch.toInteger() + 1
+                            def newVersion = "${major}.${minor}.${newPatch}"
 
-                        echo "New project version will be: ${newVersion}"
+                            echo "New project version will be: ${newVersion}"
 
-                        sh "mvn versions:set -DnewVersion=${newVersion} -DgenerateBackupPoms=false"
+                            sh "mvn versions:set -DnewVersion=${newVersion} -DgenerateBackupPoms=false"
 
-                        def branch_name = scm.branches[0].name
-                        if (branch_name.contains("*/")) {
-                            branch_name = branch_name.split("\\*/")[1]
-                        }
+                            def branch_name = env.BRANCH_NAME
 
-                        withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id',gitToolName: 'git-tool')]) {
-                            sh 'git add pom.xml'
-                            sh "git commit -m 'Bump version to ${newVersion}'"
-                            sh 'git push origin ${branch_name}'
-                        }
-                    } 
+                            withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id',gitToolName: 'git-tool')]) {
+                                sh 'git add pom.xml'
+                                sh "git commit -m 'Bump version to ${newVersion}'"
+                                sh 'git push origin ${branch_name}'
+                            }
+                        } 
+                    }
                 }
             }
 
