@@ -9,7 +9,6 @@ def call(body) {
     def APP_PORT = pipelineParams.get('appPort')
     def ENV_FILE = pipelineParams.get('envFile')
     def NETWORK_NAME = pipelineParams.get('networkName')
-    def APP_TYPE = pipelineParams.get('appType') ?: 'default'
 
     pipeline {
         agent any
@@ -20,55 +19,25 @@ def call(body) {
                 }
             }
 
-            stage('Increment Version') {
+            stage('Build Docker Image') {
                 steps {
-                    if (APP_TYPE == 'maven') {
-                        sh 'mvn clean package -DskipTests'
-                        def projectVersion = sh(script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
-                        echo "Current project version: ${projectVersion}"
-
-                        def (major, minor, patch) = projectVersion.tokenize('.')
-
-                        def newPatch = patch.toInteger() + 1
-                        def newVersion = "${major}.${minor}.${newPatch}"
-
-                        echo "New project version will be: ${newVersion}"
-
-                        sh "mvn versions:set -DnewVersion=${newVersion} -DgenerateBackupPoms=false"
-
-                        def branch_name = scm.branches[0].name
-                        if (branch_name.contains("*/")) {
-                            branch_name = branch_name.split("\\*/")[1]
-                        }
-
-                        withCredentials([gitUsernamePassword(credentialsId: 'my-credentials-id',gitToolName: 'git-tool')]) {
-                            sh 'git add pom.xml'
-                            sh "git commit -m 'Bump version to ${newVersion}'"
-                            sh 'git push origin ${branch_name}'
-                        }
-                    } 
+                    buildDockerImage(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
                 }
             }
 
-            // stage('Build Docker Image') {
-            //     steps {
-            //         buildDockerImage(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
-            //     }
-            // }
+            stage('Deploy Application') {
+                steps {
+                    stoppingAndRemovingContainer(CONTAINER_NAME)
+                    createDockerNetwork(NETWORK_NAME)
+                    runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE, ENV_FILE, NETWORK_NAME)
+                }
+            }
 
-            // stage('Deploy Application') {
-            //     steps {
-            //         stoppingAndRemovingContainer(CONTAINER_NAME)
-            //         createDockerNetwork(NETWORK_NAME)
-            //         runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE, ENV_FILE, NETWORK_NAME)
-            //     }
-            // }
-
-            // stage('Removing Dangling Images') {
-            //     steps {
-            //         removingDanglingImage()
-            //     }
-            // }
+            stage('Removing Dangling Images') {
+                steps {
+                    removingDanglingImage()
+                }
+            }
         }
         post {
             success {
