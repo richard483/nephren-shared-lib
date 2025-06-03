@@ -46,8 +46,10 @@ def call(body) {
                             def branch_name = env.BRANCH_NAME
 
                             withCredentials([gitUsernamePassword(credentialsId: '14c17322-a8a2-4bc2-9a47-34d4ff8c148b',gitToolName: 'git-tool')]) {
+                                git config --global user.email "richard.william483@gmail.com"
+                                git config --global user.name "richard483"
                                 sh 'git add pom.xml'
-                                sh "git commit -m 'Bump version to ${newVersion}'"
+                                sh "git commit -m 'JENKINS: Bump version to ${newVersion}'"
                                 sh 'git push origin ${branch_name}'
                             }
                         } 
