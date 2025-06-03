@@ -45,7 +45,7 @@ def call(body) {
                                 error "Could not extract a valid version string from raw output: '${rawOutput}'"
                             }
                             
-                            sh "mvn versions:set -DnewVersion=${projectVersion} -DgenerateBackupPoms=false"
+                            sh "mvn versions:set -DnewVersion=[0m0.0.5 -DgenerateBackupPoms=false"
                             echo "Project version updated to ${projectVersion} in pom.xml"
 
                             def branch_name = env.BRANCH_NAME
