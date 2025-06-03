@@ -1,3 +1,5 @@
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 def call(body) {
     def pipelineParams = [:]
     body.resolveStrategy = Closure.DELEGATE_FIRST
@@ -23,8 +25,7 @@ def call(body) {
             stage('Increment Version') {
                 steps {
                     script {
-                        import java.util.regex.Matcher
-                        import java.util.regex.Pattern
+
                         if (APP_TYPE == 'maven') {
                             echo "Detected Maven project. Incrementing version..."
 
