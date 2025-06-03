@@ -36,7 +36,8 @@ def call(body) {
                             Matcher matcher = versionPattern.matcher(rawOutput)
 
                             if (matcher.find()) {
-                                projectVersion = matcher.group(1) 
+                                projectVersion = matcher.group(1)
+                            }
 
                             echo "2. Version extracted by regex: '${projectVersion}'"
 
@@ -44,8 +45,8 @@ def call(body) {
                                 error "Could not extract a valid version string from raw output: '${rawOutput}'"
                             }
                             
-                            sh "mvn versions:set -DnewVersion=${projectVersion} -DgenerateBackupPoms=false"
-                            echo "Project version updated to ${projectVersion} in pom.xml"
+                            sh "mvn versions:set -DnewVersion=${newVersion} -DgenerateBackupPoms=false"
+                            echo "Project version updated to ${newVersion} in pom.xml"
 
                             def branch_name = env.BRANCH_NAME
                             if (branch_name == null || branch_name.isEmpty()) {
@@ -65,7 +66,7 @@ def call(body) {
                                 sh 'git config --global user.email "richard.william483@gmail.com"'
                                 sh 'git config --global user.name "richard483"'
                                 sh 'git add pom.xml'
-                                sh "git commit -m 'JENKINS: Bump version to ${projectVersion}'"
+                                sh "git commit -m 'JENKINS: Bump version to ${newVersion}'"
                                 sh "git push origin HEAD:${branch_name}"
                             }
                         } 
