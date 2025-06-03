@@ -44,13 +44,25 @@ def call(body) {
                             sh "mvn versions:set -DnewVersion=${newVersion} -DgenerateBackupPoms=false"
 
                             def branch_name = env.BRANCH_NAME
+                            if (branch_name == null || branch_name.isEmpty()) {
+                                if (scm != null && scm.branches != null && !scm.branches.isEmpty()) {
+                                    branch_name = scm.branches[0].name
+                                    if (branch_name.startsWith("*/")) { // More robust check
+                                        branch_name = branch_name.substring(2) // Remove "*/"
+                                    } else if (branch_name.startsWith("refs/heads/")) {
+                                        branch_name = branch_name.substring("refs/heads/".length())
+                                    }
+                                } else {
+                                    error "Could not determine branch name. SCM information unavailable or env.BRANCH_NAME is not set."
+                                }
+                            }
 
                             withCredentials([gitUsernamePassword(credentialsId: '14c17322-a8a2-4bc2-9a47-34d4ff8c148b',gitToolName: 'git-tool')]) {
                                 sh 'git config --global user.email "richard.william483@gmail.com"'
                                 sh 'git config --global user.name "richard483"'
                                 sh 'git add pom.xml'
                                 sh "git commit -m 'JENKINS: Bump version to ${newVersion}'"
-                                sh 'git push origin HEAD:main'
+                                sh 'git push origin HEAD:' + branch_name
                             }
                         } 
                     }
