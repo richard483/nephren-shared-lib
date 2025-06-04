@@ -23,7 +23,9 @@ def call(body) {
             stage('Increment Version') {
                 steps {
                     script {
-                        incrementMavenVersion()
+                        if (APP_TYPE == 'maven') {
+                            incrementMavenVersion()
+                        }
                     }
                 }
             }
