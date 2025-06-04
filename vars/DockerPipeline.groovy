@@ -1,5 +1,16 @@
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+
+@NonCPS
+String extractVersionWithRegex(String rawOutput) {
+    Pattern versionPattern = Pattern.compile("(\\d+\\.\\d+\\.\\d+([.-][A-Za-z0-9]+)*)")
+    Matcher matcher = versionPattern.matcher(rawOutput)
+    if (matcher.find()) {
+        return matcher.group(1)
+    }
+    return ""
+}
+
 def call(body) {
     def pipelineParams = [:]
     body.resolveStrategy = Closure.DELEGATE_FIRST
@@ -33,17 +44,7 @@ def call(body) {
                             // For deeper debugging of rawOutput if needed later:
                             // echo "Raw output bytes: ${rawOutput.bytes.collect { String.format('%02X', it) }.join(' ')}"
 
-                            // --- Strategy: Extract the version string directly ---
-                            String projectVersion = ""
-                            // This regex looks for patterns like X.Y.Z, X.Y.Z-SNAPSHOT, X.Y.Z.RC1, etc.
-                            Pattern versionPattern = Pattern.compile("(\\d+\\.\\d+\\.\\d+([.-][A-Za-z0-9]+)*)")
-                            Matcher matcher = versionPattern.matcher(rawOutput)
-
-                            if (matcher.find()) {
-                                projectVersion = matcher.group(1) // group(1) gets the main captured version string
-                            }
-
-                            echo "2. Version extracted by regex: '${projectVersion}'"
+                            String projectVersion = extractVersionWithRegex(rawOutput)
 
                             if (projectVersion.isEmpty()) {
                                 error "Could not extract a valid version string from raw output: '${rawOutput}'"
@@ -91,14 +92,14 @@ def call(body) {
                                 }
                             }
 
-                            withCredentials([gitUsernamePassword(credentialsId: '14c17322-a8a2-4bc2-9a47-34d4ff8c148b',gitToolName: 'git-tool')]) {
+                            withCredentials([gitUsernamePassword(credentialsId: '14c17322-a8a2-4bc2-9a47-34d4ff8c148b', gitToolName: 'git-tool')]) {
                                 sh 'git config --global user.email "richard.william483@gmail.com"'
                                 sh 'git config --global user.name "richard483"'
                                 sh 'git add pom.xml'
                                 sh "git commit -m 'JENKINS: Bump version to ${projectVersion}'"
                                 sh "git push origin HEAD:${branch_name}"
                             }
-                        } 
+                        }
                     }
                 }
             }
