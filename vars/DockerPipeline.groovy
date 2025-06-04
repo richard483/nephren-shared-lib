@@ -40,23 +40,17 @@ def call(body) {
                         if (APP_TYPE == 'maven') {
                             echo "Detected Maven project. Incrementing version..."
                             def rawOutput = sh(script: 'mvn -B help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
-                            echo "1. Raw output from mvn: '${rawOutput}'"
-                            // For deeper debugging of rawOutput if needed later:
-                            // echo "Raw output bytes: ${rawOutput.bytes.collect { String.format('%02X', it) }.join(' ')}"
 
                             String projectVersion = extractVersionWithRegex(rawOutput)
 
                             if (projectVersion.isEmpty()) {
                                 error "Could not extract a valid version string from raw output: '${rawOutput}'"
                             }
-                            echo "3. Final project version for tokenization: '${projectVersion}'"
 
-                            // --- The rest of your logic should now work with a clean projectVersion ---
                             def versionParts = projectVersion.tokenize('-')
                             def baseVersion = versionParts[0]
                             def snapshotSuffix = versionParts.size() > 1 ? "-${versionParts[1]}" : ""
 
-                            // Double-check baseVersion before tokenizing by '.'
                             if (!baseVersion.matches("^\\d+\\.\\d+\\.\\d+\$")) {
                                 error "Extracted base version '${baseVersion}' is not in X.Y.Z format. Full extracted version was '${projectVersion}'"
                             }
@@ -69,12 +63,6 @@ def call(body) {
                             def newPatch = patch.toInteger() + 1
                             def newVersion = "${major}.${minor}.${newPatch}${snapshotSuffix}"
 
-                            echo "4. New project version calculated: '${newVersion}'"
-
-                            if (newVersion.contains("\u001B")) {
-                                error "FATAL: Calculated newVersion '${newVersion}' still contains ANSI escape codes after extraction strategy!"
-                            }
-
                             sh "mvn versions:set -DnewVersion=${newVersion} -DgenerateBackupPoms=false"
                             echo "Project version updated to ${newVersion} in pom.xml"
 
@@ -82,7 +70,7 @@ def call(body) {
                             if (branch_name == null || branch_name.isEmpty()) {
                                 if (scm != null && scm.branches != null && !scm.branches.isEmpty()) {
                                     branch_name = scm.branches[0].name
-                                    if (branch_name.startsWith("*/")) { // More robust check
+                                    if (branch_name.startsWith("*/")) {
                                         branch_name = branch_name.substring(2) // Remove "*/"
                                     } else if (branch_name.startsWith("refs/heads/")) {
                                         branch_name = branch_name.substring("refs/heads/".length())
