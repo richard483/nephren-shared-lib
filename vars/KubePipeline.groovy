@@ -7,6 +7,7 @@ def call(body) {
     def DOCKER_IMAGE = pipelineParams.get('dockerImage')
     def CONTAINER_NAME = pipelineParams.get('projectName')
     def APP_PORT = pipelineParams.get('appPort')
+    def KUBE_NODEPORT = pipelineParams.get('kubeNodePort') ?: ''
     def EXTERNAL_ENDPOINTS_IP = pipelineParams.get('externalEndpointsIp')
 
     pipeline {
@@ -34,7 +35,7 @@ def call(body) {
 
             stage('Deploy to Kubernetes') {
                 steps {
-                    prepareKubernetesDeployment(CONTAINER_NAME, DOCKER_IMAGE, APP_PORT, EXTERNAL_ENDPOINTS_IP)
+                    prepareKubernetesDeployment(CONTAINER_NAME, DOCKER_IMAGE, APP_PORT, EXTERNAL_ENDPOINTS_IP, KUBE_NODEPORT)
                     sh """
                         # Delete existing resources
                         /snap/bin/microk8s kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found

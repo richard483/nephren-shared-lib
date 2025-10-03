@@ -1,4 +1,4 @@
-def call(String containerName, String dockerImage, String appPort, String externalEndpointIp) {
+def call(String containerName, String dockerImage, String appPort, String externalEndpointIp, String kubeNodePort) {
     sh """
         # Prepare deployment YAML
         cat <<EOF > deployment.yaml
@@ -38,6 +38,7 @@ spec:
     ports:
       - port: ${appPort}
         targetPort: ${appPort}
+        nodePort: ${kubeNodePort}
 EOF
 """
 }
