@@ -1,12 +1,6 @@
-def call(String dockerImage, Map args) {
-    echo 'Building Docker image...'
-    def dockerBuildCommand = "docker build -t ${dockerImage}"
+import com.nephren.DockerUtils
 
-    args.each { key, value ->
-        dockerBuildCommand += " --build-arg ${key}=${value}"
-    }
-
-    dockerBuildCommand += ' .'
-
-    sh dockerBuildCommand
+def call(String dockerImage, Map args = [:]) {
+    def utils = new DockerUtils(this)
+    utils.buildImage(dockerImage, args)
 }
