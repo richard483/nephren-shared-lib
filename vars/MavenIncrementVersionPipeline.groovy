@@ -29,26 +29,6 @@ def call(body) {
                     }
                 }
             }
-
-            // stage('Build Docker Image') {
-            //     steps {
-            //         buildDockerImage(DOCKER_IMAGE, pipelineParams.get('buildArgs'))
-            //     }
-            // }
-
-            // stage('Deploy Application') {
-            //     steps {
-            //         stoppingAndRemovingContainer(CONTAINER_NAME)
-            //         createDockerNetwork(NETWORK_NAME)
-            //         runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE, ENV_FILE, NETWORK_NAME)
-            //     }
-            // }
-
-            // stage('Removing Dangling Images') {
-            //     steps {
-            //         removingDanglingImage()
-            //     }
-            // }
         }
         post {
             success {
