@@ -37,32 +37,32 @@ def call(body) {
                     prepareKubernetesDeployment(CONTAINER_NAME, DOCKER_IMAGE, APP_PORT, EXTERNAL_ENDPOINTS_IP)
                     sh """
                         # Delete existing resources
-                        microk8s kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found
-                        microk8s kubectl delete service ${CONTAINER_NAME} --ignore-not-found
+                        /snap/bin/microk8s kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found
+                        /snap/bin/microk8s kubectl delete service ${CONTAINER_NAME} --ignore-not-found
 
                         # Create ConfigMap
-                        microk8s kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | microk8s kubectl apply -f -
+                        /snap/bin/microk8s kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | /snap/bin/microk8s kubectl apply -f -
 
                         # Create Secret
-                        microk8s kubectl create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | microk8s kubectl apply -f -
+                        /snap/bin/microk8s kubectl create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | /snap/bin/microk8s kubectl apply -f -
 
                         # Debug: Show the YAML
                         echo "Deployment YAML:"
                         cat deployment.yaml
 
                         # Apply the deployment
-                        microk8s kubectl apply -f deployment.yaml
+                        /snap/bin/microk8s kubectl apply -f deployment.yaml
 
                         # Bind environment variables from ConfigMap to the deployment
-                        microk8s kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
+                        /snap/bin/microk8s kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
 
                         # Verify pod status
                         echo "Pod status:"
-                        microk8s kubectl get pods -l app=${CONTAINER_NAME}
+                        /snap/bin/microk8s kubectl get pods -l app=${CONTAINER_NAME}
 
                         # Debug pod issues if not running
                         echo "Checking for pod issues:"
-                        microk8s kubectl describe pods -l app=${CONTAINER_NAME}
+                        /snap/bin/microk8s kubectl describe pods -l app=${CONTAINER_NAME}
                     """
                 }
             }
@@ -72,11 +72,11 @@ def call(body) {
                     sh """
                         # Wait for pod to be ready (timeout after 60 seconds)
                         echo "Waiting for pod to be ready..."
-                        microk8s kubectl wait --for=condition=ready pod -l app=${CONTAINER_NAME} --timeout=60s || true
+                        /snap/bin/microk8s kubectl wait --for=condition=ready pod -l app=${CONTAINER_NAME} --timeout=60s || true
 
                         # Get service information
                         echo "Service details:"
-                        microk8s kubectl get service ${CONTAINER_NAME}
+                        /snap/bin/microk8s kubectl get service ${CONTAINER_NAME}
                     """
                 }
             }
