@@ -27,7 +27,7 @@ class DockerUtils implements Serializable {
         }
 
         def networkExists = script.sh(
-                script: "docker network ls --filter name=^${networkName}$ --format '{{.Name}}' | grep -q '^${networkName}$'",
+                script: "docker network ls --filter name=^${networkName}\$ --format '{{.Name}}' | grep -q '^${networkName}\$'",
                 returnStatus: true
         ) == 0
 
