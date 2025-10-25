@@ -18,15 +18,15 @@ metadata:
   labels:
     app: ${containerName}
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: ${containerName}
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+      maxUnavailable: 1
+      maxSurge: 2
   template:
     metadata:
       labels:
