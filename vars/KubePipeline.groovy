@@ -9,6 +9,7 @@ def call(body) {
     def APP_PORT = pipelineParams.get('appPort')
     def KUBE_NODEPORT = pipelineParams.get('kubeNodePort') ?: ''
     def EXTERNAL_ENDPOINTS_IP = pipelineParams.get('externalEndpointsIp')
+    def REPLICA_COUNT = pipelineParams.get('replicaCount') ?: '1'
 
     pipeline {
         agent any
@@ -33,7 +34,7 @@ def call(body) {
 
             stage('Deploy to Kubernetes') {
                 steps {
-                    prepareKubernetesDeployment(CONTAINER_NAME, DOCKER_IMAGE, APP_PORT, EXTERNAL_ENDPOINTS_IP, KUBE_NODEPORT)
+                    prepareKubernetesDeployment(CONTAINER_NAME, DOCKER_IMAGE, APP_PORT, EXTERNAL_ENDPOINTS_IP, KUBE_NODEPORT, REPLICA_COUNT)
                     sh """
                         /snap/bin/microk8s kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found
                         /snap/bin/microk8s kubectl delete service ${CONTAINER_NAME} --ignore-not-found

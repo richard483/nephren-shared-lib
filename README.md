@@ -27,11 +27,13 @@ GlobalPipeline() {
 
 ```groovy
 KubePipeline() {
-  dockerImage = 'my-org/my-app:latest'
-  projectName = 'my-app'
-  appPort = '8080'
+  dockerImage = 'my-org/my-app:latest'        // required
+  projectName = 'my-app'                      // required (container/service name)
+  appPort = '8080'                            // optional
   kubeNodePort = '30080'                      // optional nodePort for Service
   externalEndpointsIp = '10.0.0.50'           // MetalLB / loadBalancer IP(s)
+  replicaCount = '3'                          // optional number of replicas (default: 1)
+  buildArgs = [FOO: 'bar']                    // optional map of build args
 }
 ```
 

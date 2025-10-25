@@ -7,7 +7,7 @@ class KubernetesUtils implements Serializable {
         this.script = script
     }
 
-    def prepareDeploymentYaml(String containerName, String dockerImage, String appPort, String externalEndpointIp, String kubeNodePort) {
+    def prepareDeploymentYaml(String containerName, String dockerImage, String appPort, String externalEndpointIp, String kubeNodePort, String replicaCount) {
         script.sh """
             # Prepare deployment YAML
             cat <<EOF > deployment.yaml
@@ -18,15 +18,15 @@ metadata:
   labels:
     app: ${containerName}
 spec:
-  replicas: 2
+  replicas: ${replicaCount}
   selector:
     matchLabels:
       app: ${containerName}
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 2
+      maxUnavailable: ${(replicaCount.toInteger() + 1) / 2}
+      maxSurge: 1
   template:
     metadata:
       labels:
