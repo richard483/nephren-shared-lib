@@ -22,6 +22,11 @@ spec:
   selector:
     matchLabels:
       app: ${containerName}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   template:
     metadata:
       labels:
