@@ -7,7 +7,7 @@ class KubernetesUtils implements Serializable {
         this.script = script
     }
 
-    def prepareDeploymentYaml(String containerName, String dockerImage, String appPort, String externalEndpointIp, String kubeNodePort, String replicaCount) {
+    def prepareDeploymentYaml(String containerName, String dockerImage, String appPort, String externalEndpointIp, String kubeNodePort, String replicaCount, String healthCheckPath) {
         script.sh """
             # Prepare deployment YAML
             cat <<EOF > deployment.yaml
@@ -38,6 +38,12 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: ${appPort}
+        readinessProbe:
+          httpGet:
+            path: ${healthCheckPath}
+            port: ${appPort}
+          initialDelaySeconds: 5
+          periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
