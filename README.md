@@ -33,7 +33,7 @@ KubePipeline() {
   kubeNodePort = '30080'                      // optional nodePort for Service
   externalEndpointsIp = '10.0.0.50'           // MetalLB / loadBalancer IP(s)
   replicaCount = '3'                          // optional number of replicas (default: 1)
-  healthCheckPath = '/health'                 // optional readiness probe path (default: '/')
+  healthCheckPath = '/health'                 // optional readiness probe path (default: '', which mean no health check)
   buildArgs = [FOO: 'bar']                    // optional map of build args
 }
 ```
