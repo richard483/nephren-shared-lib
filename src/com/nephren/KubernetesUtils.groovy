@@ -8,6 +8,30 @@ class KubernetesUtils implements Serializable {
     }
 
     def prepareDeploymentYaml(String containerName, String dockerImage, String appPort, String externalEndpointIp, String kubeNodePort, String replicaCount, String healthCheckPath) {
+        
+        def probeAndLifecycleYaml = ""
+        
+        if (healthCheckPath && !healthCheckPath.trim().isEmpty()) {
+            
+            probeAndLifecycleYaml = """
+        readinessProbe:
+          httpGet:
+            path: ${healthCheckPath}
+            port: ${appPort}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: ${healthCheckPath}
+            port: ${appPort}
+          initialDelaySeconds: 30
+          periodSeconds: 15
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 10"]"""
+        }
+
         script.sh """
             # Prepare deployment YAML
             cat <<EOF > deployment.yaml
@@ -38,12 +62,7 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: ${appPort}
-        readinessProbe:
-          httpGet:
-            path: ${healthCheckPath}
-            port: ${appPort}
-          initialDelaySeconds: 5
-          periodSeconds: 10
+        ${probeAndLifecycleYaml}
 ---
 apiVersion: v1
 kind: Service

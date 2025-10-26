@@ -10,7 +10,7 @@ def call(body) {
     def KUBE_NODEPORT = pipelineParams.get('kubeNodePort') ?: ''
     def EXTERNAL_ENDPOINTS_IP = pipelineParams.get('externalEndpointsIp')
     def REPLICA_COUNT = pipelineParams.get('replicaCount') ?: '1'
-    def HEALTH_CHECK_PATH = pipelineParams.get('healthCheckPath') ?: '/'
+    def HEALTH_CHECK_PATH = pipelineParams.get('healthCheckPath') ?: ''
 
     pipeline {
         agent any
