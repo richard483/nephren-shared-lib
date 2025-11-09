@@ -28,7 +28,7 @@ class GitUtils implements Serializable {
         script.echo "Checking out ${branch} from ${repoUrl} with a ${checkoutTimeout}-minute timeout..."
         
         script.timeout(time: checkoutTimeout, unit: 'MINUTES') {
-            cleanWs() 
+            script.cleanWs() 
             
             checkout scmCheckout
         }
