@@ -25,7 +25,7 @@ class GitUtils implements Serializable {
             userRemoteConfigs: [remoteConfig]
         ]
 
-        echo "Checking out ${branch} from ${repoUrl} with a ${checkoutTimeout}-minute timeout..."
+        script.echo "Checking out ${branch} from ${repoUrl} with a ${checkoutTimeout}-minute timeout..."
         
         timeout(time: checkoutTimeout, unit: 'MINUTES') {
             cleanWs() 
