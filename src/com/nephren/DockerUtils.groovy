@@ -38,13 +38,17 @@ class DockerUtils implements Serializable {
         }
     }
 
-    def runContainer(String appPort, String containerName, String dockerImage, String envFile, String networkName) {
+    def runContainer(String appPort, String containerName, String dockerImage, String envFile, String networkName, String volumeDriver) {
         script.echo 'Running new container...'
 
         def runCommand = 'docker run -d'
 
         if (networkName != null && !networkName.isEmpty()) {
             runCommand += " --net ${networkName}"
+        }
+
+        if (volumeDriver != null && !volumeDriver.isEmpty()) {
+            runCommand += " --volume-driver ${volumeDriver}"
         }
 
         if (appPort != null && !appPort.isEmpty()) {

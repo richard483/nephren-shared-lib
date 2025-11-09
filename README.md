@@ -20,6 +20,7 @@ GlobalPipeline() {
   networkName = 'my-network'                  // optional
   envFile = 'jenkins-secret-id'               // optional (credentialsId of a secret file)
   buildArgs = [FOO: 'bar']                    // optional map of build args
+  volumeDriver = 'my-volume-driver'           // optional volume driver for container (example: '/var/lib/docker/volumes:my-volume/_data' on host)
 }
 ```
 

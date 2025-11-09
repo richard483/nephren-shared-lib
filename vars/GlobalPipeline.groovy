@@ -9,6 +9,7 @@ def call(body) {
     def APP_PORT = pipelineParams.get('appPort')
     def ENV_FILE = pipelineParams.get('envFile')
     def NETWORK_NAME = pipelineParams.get('networkName')
+    def VOLUME_DRIVER = pipelineParams.get('volumeDriver')
 
     pipeline {
         agent any
@@ -29,7 +30,7 @@ def call(body) {
                 steps {
                     stoppingAndRemovingContainer(CONTAINER_NAME)
                     createDockerNetwork(NETWORK_NAME)
-                    runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE, ENV_FILE, NETWORK_NAME)
+                    runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE, ENV_FILE, NETWORK_NAME, VOLUME_DRIVER)
                 }
             }
 
