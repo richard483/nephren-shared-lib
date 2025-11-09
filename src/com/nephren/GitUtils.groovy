@@ -1,9 +1,9 @@
 package com.nephren
 
-class DockerUtils implements Serializable {
+class GitUtils implements Serializable {
     def script
 
-    DockerUtils(script) {
+    GitUtils(script) {
         this.script = script
     }
 
