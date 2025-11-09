@@ -30,7 +30,7 @@ class GitUtils implements Serializable {
         script.timeout(time: checkoutTimeout, unit: 'MINUTES') {
             script.cleanWs() 
             
-            checkout scmCheckout
+            script.checkout scmCheckout
         }
     }
 }
