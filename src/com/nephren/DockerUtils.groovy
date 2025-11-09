@@ -48,7 +48,7 @@ class DockerUtils implements Serializable {
         }
 
         if (volumeDriver != null && !volumeDriver.isEmpty()) {
-            runCommand += " --volume-driver ${volumeDriver}"
+            runCommand += " -v ${volumeDriver}"
         }
 
         if (appPort != null && !appPort.isEmpty()) {
