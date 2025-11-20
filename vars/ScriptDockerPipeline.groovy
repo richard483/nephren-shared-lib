@@ -10,6 +10,7 @@ def call(body) {
     def ENV_FILE = pipelineParams.get('envFile')
     def NETWORK_NAME = pipelineParams.get('networkName')
     def VOLUME_DRIVER = pipelineParams.get('volumeDriver')
+    def AGENT_LABEL = pipelineParams.get('agentLabel', 'any')
 
     def gitConfig = pipelineParams.get('gitConfig', [:])
     def CHECKOUT_TIMEOUT = gitConfig.get('checkoutTimeout', 10)
@@ -18,7 +19,7 @@ def call(body) {
     def CREDENTIALS_ID = gitConfig.get('credentialsId', null)
 
     pipeline {
-        agent any
+        agent { label AGENT_LABEL }
         stages {
             stage('Checkout Code') {
                 steps {

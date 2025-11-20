@@ -10,6 +10,27 @@ Include the library in your Jenkinsfile (name depends on how you register it in 
 
 Examples
 
+- Script Docker pipeline (build + deploy with Git checkout):
+
+```groovy
+ScriptDockerPipeline() {
+  dockerImage = 'my-org/my-app:latest'         // required
+  projectName = 'my-app'                      // required (container/service name)
+  appPort = '8080'                            // optional
+  networkName = 'my-network'                  // optional
+  envFile = 'jenkins-secret-id'               // optional (credentialsId of a secret file)
+  buildArgs = [FOO: 'bar']                    // optional map of build args
+  volumeDriver = 'my-volume-driver'           // optional volume driver for container (example: '/var/lib/docker/volumes:my-volume/_data' on host)
+  agentLabel = 'docker-node'                  // optional agent label (default: 'any')
+  gitConfig = [                               // optional Git configuration
+    repoUrl: 'https://github.com/org/repo.git',
+    branch: 'main',                           // default: 'main'
+    credentialsId: 'github-creds',            // optional
+    checkoutTimeout: 10                       // default: 10 minutes
+  ]
+}
+```
+
 - Global Docker pipeline (build + run):
 
 ```groovy
