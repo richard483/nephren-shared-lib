@@ -19,6 +19,7 @@ ScriptDockerPipeline() {
   appPort = '8080'                            // optional
   networkName = 'my-network'                  // optional
   envFile = 'jenkins-secret-id'               // optional (credentialsId of a secret file)
+  envVariables = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
   buildArgs = [FOO: 'bar']                    // optional map of build args
   volumeDriver = 'my-volume-driver'           // optional volume driver for container (example: '/var/lib/docker/volumes:my-volume/_data' on host)
   agentLabel = 'docker-node'                  // optional agent label (default: 'any')
@@ -37,6 +38,7 @@ ScriptDockerPipeline() {
 ScriptDockerComposePipeline() {
   projectName = 'my-app'                      // optional (compose project name)
   composeFile = 'docker-compose.yml'          // optional (default: docker-compose.yml)
+  envVariables = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
   agentLabel = 'docker-node'                  // optional agent label (default: 'any')
   gitConfig = [                               // optional Git configuration
     repoUrl: 'https://github.com/org/repo.git',
@@ -56,6 +58,7 @@ GlobalPipeline() {
   appPort = '8080'                            // optional
   networkName = 'my-network'                  // optional
   envFile = 'jenkins-secret-id'               // optional (credentialsId of a secret file)
+  envVariables = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
   buildArgs = [FOO: 'bar']                    // optional map of build args
   volumeDriver = 'my-volume-driver'           // optional volume driver for container (example: '/var/lib/docker/volumes:my-volume/_data' on host)
 }
@@ -67,6 +70,7 @@ GlobalPipeline() {
 DockerComposePipeline() {
   projectName = 'my-app'                      // optional (compose project name)
   composeFile = 'docker-compose.yml'          // optional (default: docker-compose.yml)
+  envVariables = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
 }
 ```
 
@@ -100,9 +104,9 @@ MavenIncrementVersionPipeline() {
 buildDockerImage('localhost:32000/my-app:1.2.3', [ARG1: 'value'])
 prepareKubernetesDeployment('my-app','my-app:1.2.3','8080','10.0.0.50','30080')
 stoppingAndRemovingContainer('my-app')
-runningNewContainer('8080','my-app','localhost:32000/my-app:1.2.3','jenkins-secret-id','my-network')
+runningNewContainer('8080','my-app','localhost:32000/my-app:1.2.3','jenkins-secret-id','my-network',null,[FOO: 'bar'])
 createDockerNetwork('my-network')
-dockerComposeUp('docker-compose.yml','my-app')
+dockerComposeUp('docker-compose.yml','my-app',[FOO: 'bar'])
 removingDanglingImage()
 incrementMavenVersion()
 ```

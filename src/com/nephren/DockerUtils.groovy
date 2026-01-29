@@ -38,7 +38,7 @@ class DockerUtils implements Serializable {
         }
     }
 
-    def runContainer(String appPort, String containerName, String dockerImage, String envFile, String networkName, String volumeDriver) {
+    def runContainer(String appPort, String containerName, String dockerImage, String envFile, String networkName, String volumeDriver, def envVariables = null) {
         script.echo 'Running new container...'
 
         def runCommand = 'docker run -d'
@@ -67,6 +67,16 @@ class DockerUtils implements Serializable {
                 envs.each { env ->
                     runCommand += " -e \"${env.trim()}\""
                 }
+            }
+        }
+
+        if (envVariables instanceof Map) {
+            envVariables.each { key, value ->
+                runCommand += " -e \"${key}=${value}\""
+            }
+        } else if (envVariables instanceof List) {
+            envVariables.each { env ->
+                runCommand += " -e \"${env.toString().trim()}\""
             }
         }
 

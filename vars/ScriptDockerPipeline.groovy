@@ -10,6 +10,7 @@ def call(body) {
     def ENV_FILE = pipelineParams.get('envFile')
     def NETWORK_NAME = pipelineParams.get('networkName')
     def VOLUME_DRIVER = pipelineParams.get('volumeDriver')
+    def ENV_VARIABLES = pipelineParams.get('envVariables')
     def AGENT_LABEL = pipelineParams.get('agentLabel', 'any')
 
     def gitConfig = pipelineParams.get('gitConfig', [:])
@@ -37,7 +38,7 @@ def call(body) {
                 steps {
                     stoppingAndRemovingContainer(CONTAINER_NAME)
                     createDockerNetwork(NETWORK_NAME)
-                    runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE, ENV_FILE, NETWORK_NAME, VOLUME_DRIVER)
+                    runningNewContainer(APP_PORT, CONTAINER_NAME, DOCKER_IMAGE, ENV_FILE, NETWORK_NAME, VOLUME_DRIVER, ENV_VARIABLES)
                 }
             }
 

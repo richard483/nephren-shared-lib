@@ -6,6 +6,7 @@ def call(body) {
 
     def PROJECT_NAME = pipelineParams.get('projectName')
     def COMPOSE_FILE = pipelineParams.get('composeFile', 'docker-compose.yml')
+    def ENV_VARIABLES = pipelineParams.get('envVariables')
     def AGENT_LABEL = pipelineParams.get('agentLabel', 'any')
 
     def gitConfig = pipelineParams.get('gitConfig', [:])
@@ -25,7 +26,7 @@ def call(body) {
 
             stage('Compose Up') {
                 steps {
-                    dockerComposeUp(COMPOSE_FILE, PROJECT_NAME)
+                    dockerComposeUp(COMPOSE_FILE, PROJECT_NAME, ENV_VARIABLES)
                 }
             }
 
