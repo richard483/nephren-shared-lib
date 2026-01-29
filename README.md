@@ -31,6 +31,22 @@ ScriptDockerPipeline() {
 }
 ```
 
+- Script Docker Compose pipeline (compose up with Git checkout):
+
+```groovy
+ScriptDockerComposePipeline() {
+  projectName = 'my-app'                      // optional (compose project name)
+  composeFile = 'docker-compose.yml'          // optional (default: docker-compose.yml)
+  agentLabel = 'docker-node'                  // optional agent label (default: 'any')
+  gitConfig = [                               // optional Git configuration
+    repoUrl: 'https://github.com/org/repo.git',
+    branch: 'main',                           // default: 'main'
+    credentialsId: 'github-creds',            // optional
+    checkoutTimeout: 10                       // default: 10 minutes
+  ]
+}
+```
+
 - Global Docker pipeline (build + run):
 
 ```groovy
@@ -42,6 +58,15 @@ GlobalPipeline() {
   envFile = 'jenkins-secret-id'               // optional (credentialsId of a secret file)
   buildArgs = [FOO: 'bar']                    // optional map of build args
   volumeDriver = 'my-volume-driver'           // optional volume driver for container (example: '/var/lib/docker/volumes:my-volume/_data' on host)
+}
+```
+
+- Global Docker Compose pipeline (compose up):
+
+```groovy
+DockerComposePipeline() {
+  projectName = 'my-app'                      // optional (compose project name)
+  composeFile = 'docker-compose.yml'          // optional (default: docker-compose.yml)
 }
 ```
 
@@ -77,6 +102,7 @@ prepareKubernetesDeployment('my-app','my-app:1.2.3','8080','10.0.0.50','30080')
 stoppingAndRemovingContainer('my-app')
 runningNewContainer('8080','my-app','localhost:32000/my-app:1.2.3','jenkins-secret-id','my-network')
 createDockerNetwork('my-network')
+dockerComposeUp('docker-compose.yml','my-app')
 removingDanglingImage()
 incrementMavenVersion()
 ```
