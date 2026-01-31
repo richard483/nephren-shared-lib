@@ -10,6 +10,13 @@ def call(body) {
 
     pipeline {
         agent any
+        options {
+            buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5', fileSizeLimit: '10MB'))
+            timeout(time: 30, unit: 'MINUTES')
+            timestamps()
+            skipDefaultCheckout()
+            disableConcurrentBuilds()
+        }
         stages {
             stage('Checkout Code') {
                 steps {
@@ -35,6 +42,9 @@ def call(body) {
             }
             failure {
                 echo 'Pipeline failed.'
+            }
+            always {
+                cleanWs()
             }
         }
     }

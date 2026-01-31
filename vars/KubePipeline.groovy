@@ -11,9 +11,25 @@ def call(body) {
     def EXTERNAL_ENDPOINTS_IP = pipelineParams.get('externalEndpointsIp')
     def REPLICA_COUNT = pipelineParams.get('replicaCount') ?: '1'
     def HEALTH_CHECK_PATH = pipelineParams.get('healthCheckPath') ?: ''
+    def KUBECTL_PATH = pipelineParams.get('kubectlPath') ?: '/snap/bin/microk8s kubectl'
+
+    // Input validation
+    if (!DOCKER_IMAGE?.trim()) {
+        error "Required parameter 'dockerImage' is missing or empty"
+    }
+    if (!CONTAINER_NAME?.trim()) {
+        error "Required parameter 'projectName' is missing or empty"
+    }
 
     pipeline {
         agent any
+        options {
+            buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5', fileSizeLimit: '10MB'))
+            timeout(time: 45, unit: 'MINUTES')
+            timestamps()
+            skipDefaultCheckout()
+            disableConcurrentBuilds()
+        }
         stages {
             stage('Checkout Code') {
                 steps {
@@ -37,21 +53,21 @@ def call(body) {
                 steps {
                     prepareKubernetesDeployment(CONTAINER_NAME, DOCKER_IMAGE, APP_PORT, EXTERNAL_ENDPOINTS_IP, KUBE_NODEPORT, REPLICA_COUNT, HEALTH_CHECK_PATH)
                     sh """
-                        /snap/bin/microk8s kubectl delete deployment ${CONTAINER_NAME} --ignore-not-found
-                        /snap/bin/microk8s kubectl delete service ${CONTAINER_NAME} --ignore-not-found
+                        ${KUBECTL_PATH} delete deployment ${CONTAINER_NAME} --ignore-not-found
+                        ${KUBECTL_PATH} delete service ${CONTAINER_NAME} --ignore-not-found
 
-                        /snap/bin/microk8s kubectl create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | /snap/bin/microk8s kubectl apply -f -
-                        /snap/bin/microk8s kubectl create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | /snap/bin/microk8s kubectl apply -f -
+                        ${KUBECTL_PATH} create configmap ${CONTAINER_NAME}-config --from-literal=key=value --dry-run=client -o yaml | ${KUBECTL_PATH} apply -f -
+                        ${KUBECTL_PATH} create secret generic ${CONTAINER_NAME}-secret --from-literal=key=value --dry-run=client -o yaml | ${KUBECTL_PATH} apply -f -
 
                         echo "Deployment YAML:"
                         cat deployment.yaml
 
-                        /snap/bin/microk8s kubectl apply -f deployment.yaml
-                        /snap/bin/microk8s kubectl set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
+                        ${KUBECTL_PATH} apply -f deployment.yaml
+                        ${KUBECTL_PATH} set env deployment/${CONTAINER_NAME} --from=configmap/${CONTAINER_NAME}-config
                         echo "Pod status:"
-                        /snap/bin/microk8s kubectl get pods -l app=${CONTAINER_NAME}
+                        ${KUBECTL_PATH} get pods -l app=${CONTAINER_NAME}
                         echo "Checking for pod issues:"
-                        /snap/bin/microk8s kubectl describe pods -l app=${CONTAINER_NAME}
+                        ${KUBECTL_PATH} describe pods -l app=${CONTAINER_NAME}
                     """
                 }
             }
@@ -60,9 +76,9 @@ def call(body) {
                 steps {
                     sh """
                         echo "Waiting for pod to be ready..."
-                        /snap/bin/microk8s kubectl wait --for=condition=ready pod -l app=${CONTAINER_NAME} --timeout=60s || true
+                        ${KUBECTL_PATH} wait --for=condition=ready pod -l app=${CONTAINER_NAME} --timeout=60s || true
                         echo "Service details:"
-                        /snap/bin/microk8s kubectl get service ${CONTAINER_NAME}
+                        ${KUBECTL_PATH} get service ${CONTAINER_NAME}
                     """
                 }
             }
@@ -79,6 +95,9 @@ def call(body) {
             }
             failure {
                 echo 'Pipeline failed.'
+            }
+            always {
+                cleanWs()
             }
         }
     }

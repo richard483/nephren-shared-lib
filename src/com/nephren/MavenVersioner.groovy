@@ -5,9 +5,11 @@ import java.util.regex.Pattern
 
 class MavenVersioner implements Serializable {
     def script
+    String gitCredentialsId
 
-    MavenVersioner(script) {
+    MavenVersioner(script, String gitCredentialsId = null) {
         this.script = script
+        this.gitCredentialsId = gitCredentialsId ?: script.env.GIT_CREDENTIALS_ID ?: '14c17322-a8a2-4bc2-9a47-34d4ff8c148b'
     }
 
     @NonCPS
@@ -63,11 +65,11 @@ class MavenVersioner implements Serializable {
             }
         }
 
-        script.withCredentials([script.gitUsernamePassword(credentialsId: '14c17322-a8a2-4bc2-9a47-34d4ff8c148b', gitToolName: 'git-tool')]) {
-            script.sh 'git config --global user.email ""'
+        script.withCredentials([script.gitUsernamePassword(credentialsId: gitCredentialsId, gitToolName: 'git-tool')]) {
+            script.sh 'git config --global user.email "jenkins@localhost"'
             script.sh 'git config --global user.name "JENKINS"'
             script.sh 'git add pom.xml'
-            script.sh "git commit -m 'JENKINS: Bump version to ${projectVersion}'"
+            script.sh "git commit -m 'JENKINS: Bump version to ${newVersion}'"
             script.sh "git push origin HEAD:${branch_name}"
         }
     }

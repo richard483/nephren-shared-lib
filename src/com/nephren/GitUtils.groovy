@@ -10,7 +10,7 @@ class GitUtils implements Serializable {
     def checkoutWithCredential(Integer checkoutTimeout = 10, String repoUrl = '', String branch = 'main', String credentialsId = null) {
         
         if (!repoUrl) {
-            error "Configuration error: 'repoUrl' must be provided to the checkout function."
+            script.error "Configuration error: 'repoUrl' must be provided to the checkout function."
         }
 
         def remoteConfig = [url: repoUrl]

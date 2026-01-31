@@ -4,15 +4,23 @@ def call(body) {
     body.delegate = pipelineParams
     body()
 
-    def DOCKER_IMAGE = pipelineParams.get('dockerImage')
     def CONTAINER_NAME = pipelineParams.get('projectName')
-    def APP_PORT = pipelineParams.get('appPort')
-    def ENV_FILE = pipelineParams.get('envFile')
-    def NETWORK_NAME = pipelineParams.get('networkName')
     def APP_TYPE = pipelineParams.get('appType') ?: 'default'
+
+    // Input validation
+    if (!CONTAINER_NAME?.trim()) {
+        error "Required parameter 'projectName' is missing or empty"
+    }
 
     pipeline {
         agent any
+        options {
+            buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5', fileSizeLimit: '10MB'))
+            timeout(time: 15, unit: 'MINUTES')
+            timestamps()
+            skipDefaultCheckout()
+            disableConcurrentBuilds()
+        }
         stages {
             stage('Checkout Code') {
                 steps {
@@ -36,6 +44,9 @@ def call(body) {
             }
             failure {
                 echo 'Pipeline failed.'
+            }
+            always {
+                cleanWs()
             }
         }
     }
