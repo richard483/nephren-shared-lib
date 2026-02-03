@@ -1,6 +1,34 @@
-# Nephren Shared Library
+# 🚀 Nephren Shared Library
 
-This repository provides a Jenkins Shared Library with reusable pipeline entrypoints in `vars/` and helper classes in `src/com/nephren`.
+A Jenkins Shared Library providing reusable pipeline entrypoints and helper classes for Docker, Docker Compose, Kubernetes, and Maven workflows.
+
+[![Jenkins](https://img.shields.io/badge/Jenkins-Shared%20Library-blue?logo=jenkins)](https://www.jenkins.io/doc/book/pipeline/shared-libraries/)
+
+---
+
+## 📁 Project Structure
+
+```
+nephren-shared-lib/
+├── src/com/nephren/          # Helper classes (implementation details)
+│   ├── DockerUtils.groovy
+│   ├── DockerComposeUtils.groovy
+│   ├── GitUtils.groovy
+│   ├── KubernetesUtils.groovy
+│   └── MavenVersioner.groovy
+└── vars/                     # Public API (pipeline entrypoints)
+    ├── DockerPipeline.groovy
+    ├── ScriptDockerPipeline.groovy
+    ├── DockerComposePipeline.groovy
+    ├── ScriptDockerComposePipeline.groovy
+    ├── KubePipeline.groovy
+    ├── MavenIncrementVersionPipeline.groovy
+    └── ... (helper functions)
+```
+
+---
+
+## 🔧 Installation
 
 Include the library in your Jenkinsfile (name depends on how you register it in Jenkins):
 
@@ -8,110 +36,212 @@ Include the library in your Jenkinsfile (name depends on how you register it in 
 @Library('nephren-shared-lib') _
 ```
 
-Examples
+---
 
-- Script Docker pipeline (build + deploy with Git checkout):
+## ⚙️ Pipeline Options (Applied to All Pipelines)
+
+All pipelines come pre-configured with the following options:
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `buildDiscarder` | Log rotation - keeps limited builds | 5 builds, 10MB file limit |
+| `timeout` | Maximum pipeline execution time | 30 min (Docker), 45 min (K8s), 15 min (Maven) |
+| `timestamps` | Adds timestamps to console output | ✅ Enabled |
+| `skipDefaultCheckout` | Disables automatic checkout | ✅ Enabled |
+| `disableConcurrentBuilds` | Prevents parallel builds of same job | ✅ Enabled |
+
+---
+
+## 📘 Pipeline Examples
+
+### 🐳 Script Docker Pipeline
+
+Build and deploy with explicit Git checkout configuration.
 
 ```groovy
-ScriptDockerPipeline() {
-  dockerImage = 'my-org/my-app:latest'         // required
-  projectName = 'my-app'                      // required (container/service name)
-  appPort = '8080'                            // optional
-  networkName = 'my-network'                  // optional
-  envFile = 'jenkins-secret-id'               // optional (credentialsId of a secret file)
-  envVariables = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
-  buildArgs = [FOO: 'bar']                    // optional map of build args
-  volumeDriver = 'my-volume-driver'           // optional volume driver for container (example: '/var/lib/docker/volumes:my-volume/_data' on host)
-  agentLabel = 'docker-node'                  // optional agent label (default: 'any')
-  gitConfig = [                               // optional Git configuration
+ScriptDockerPipeline {
+  dockerImage   = 'my-org/my-app:latest'       // required
+  projectName   = 'my-app'                     // required (container/service name)
+  appPort       = '8080'                       // optional
+  networkName   = 'my-network'                 // optional
+  envFile       = 'jenkins-secret-id'          // optional (credentialsId of a secret file)
+  envVariables  = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
+  buildArgs     = [FOO: 'bar']                 // optional map of build args
+  volumeDriver  = '/host/path:/container/path' // optional volume mount
+  agentLabel    = 'docker-node'                // optional (default: 'any')
+  gitConfig     = [                            // optional Git configuration
     repoUrl: 'https://github.com/org/repo.git',
-    branch: 'main',                           // default: 'main'
-    credentialsId: 'github-creds',            // optional
-    checkoutTimeout: 10                       // default: 10 minutes
+    branch: 'main',                            // default: 'main'
+    credentialsId: 'github-creds',             // optional
+    checkoutTimeout: 10                        // default: 10 minutes
   ]
 }
 ```
 
-- Script Docker Compose pipeline (compose up with Git checkout):
+---
+
+### 🐳 Script Docker Compose Pipeline
+
+Compose up with explicit Git checkout configuration.
 
 ```groovy
-ScriptDockerComposePipeline() {
-  projectName = 'my-app'                      // optional (compose project name)
-  composeFile = 'docker-compose.yml'          // optional (default: docker-compose.yml)
-  envVariables = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
-  agentLabel = 'docker-node'                  // optional agent label (default: 'any')
-  gitConfig = [                               // optional Git configuration
+ScriptDockerComposePipeline {
+  projectName   = 'my-app'                     // optional (compose project name)
+  composeFile   = 'docker-compose.yml'         // optional (default: docker-compose.yml)
+  envVariables  = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
+  agentLabel    = 'docker-node'                // optional (default: 'any')
+  gitConfig     = [                            // optional Git configuration
     repoUrl: 'https://github.com/org/repo.git',
-    branch: 'main',                           // default: 'main'
-    credentialsId: 'github-creds',            // optional
-    checkoutTimeout: 10                       // default: 10 minutes
+    branch: 'main',                            // default: 'main'
+    credentialsId: 'github-creds',             // optional
+    checkoutTimeout: 10                        // default: 10 minutes
   ]
 }
 ```
 
-- Global Docker pipeline (build + run):
+---
+
+### 🐳 Docker Pipeline (SCM Checkout)
+
+Build and run using Jenkins SCM configuration.
 
 ```groovy
-GlobalPipeline() {
-  dockerImage = 'my-org/my-app:latest'         // required
-  projectName = 'my-app'                      // required (container/service name)
-  appPort = '8080'                            // optional
-  networkName = 'my-network'                  // optional
-  envFile = 'jenkins-secret-id'               // optional (credentialsId of a secret file)
-  envVariables = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
-  buildArgs = [FOO: 'bar']                    // optional map of build args
-  volumeDriver = 'my-volume-driver'           // optional volume driver for container (example: '/var/lib/docker/volumes:my-volume/_data' on host)
+DockerPipeline {
+  dockerImage   = 'my-org/my-app:latest'       // required
+  projectName   = 'my-app'                     // required (container/service name)
+  appPort       = '8080'                       // optional
+  networkName   = 'my-network'                 // optional
+  envFile       = 'jenkins-secret-id'          // optional (credentialsId of a secret file)
+  envVariables  = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
+  buildArgs     = [FOO: 'bar']                 // optional map of build args
+  volumeDriver  = '/host/path:/container/path' // optional volume mount
 }
 ```
 
-- Global Docker Compose pipeline (compose up):
+---
+
+### 🐳 Docker Compose Pipeline (SCM Checkout)
+
+Compose up using Jenkins SCM configuration.
 
 ```groovy
-DockerComposePipeline() {
-  projectName = 'my-app'                      // optional (compose project name)
-  composeFile = 'docker-compose.yml'          // optional (default: docker-compose.yml)
-  envVariables = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
+DockerComposePipeline {
+  projectName   = 'my-app'                     // optional (compose project name)
+  composeFile   = 'docker-compose.yml'         // optional (default: docker-compose.yml)
+  envVariables  = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
 }
 ```
 
-- Kubernetes pipeline (build + deploy):
+---
+
+### ☸️ Kubernetes Pipeline
+
+Build Docker image and deploy to Kubernetes cluster.
 
 ```groovy
-KubePipeline() {
-  dockerImage = 'my-org/my-app:latest'        // required
-  projectName = 'my-app'                      // required (container/service name)
-  appPort = '8080'                            // optional
-  kubeNodePort = '30080'                      // optional nodePort for Service
-  externalEndpointsIp = '10.0.0.50'           // MetalLB / loadBalancer IP(s)
-  replicaCount = '3'                          // optional number of replicas (default: 1)
-  healthCheckPath = '/health'                 // optional readiness probe path (default: '', which mean no health check)
-  buildArgs = [FOO: 'bar']                    // optional map of build args
+KubePipeline {
+  dockerImage        = 'my-org/my-app:latest'  // required
+  projectName        = 'my-app'                // required (container/service name)
+  appPort            = '8080'                  // optional
+  kubeNodePort       = '30080'                 // optional nodePort for Service
+  externalEndpointsIp = '10.0.0.50'            // MetalLB / loadBalancer IP(s)
+  replicaCount       = '3'                     // optional (default: '1')
+  healthCheckPath    = '/health'               // optional readiness probe path (default: '' = no health check)
+  buildArgs          = [FOO: 'bar']            // optional map of build args
+  kubectlPath        = '/snap/bin/microk8s kubectl' // optional (default: '/snap/bin/microk8s kubectl')
 }
 ```
 
-- Maven increment-only pipeline:
+> **Note:** The `kubectlPath` parameter allows you to customize the kubectl binary location for different Kubernetes distributions (microk8s, k3s, standard kubectl, etc.)
+
+---
+
+### 📦 Maven Version Increment Pipeline
+
+Automatically increment Maven project version and push to Git.
 
 ```groovy
-MavenIncrementVersionPipeline() {
-  projectName = 'my-app'
-  appType = 'maven'   // triggers Maven version increment when set
+MavenIncrementVersionPipeline {
+  projectName = 'my-app'                       // required
+  appType     = 'maven'                        // triggers Maven version increment when set
 }
 ```
 
-- Call individual helpers from a Jenkinsfile (examples):
+> **Note:** Set the `GIT_CREDENTIALS_ID` environment variable or configure the default credentials ID in `MavenVersioner.groovy` for Git push operations.
+
+---
+
+## 🛠️ Individual Helper Functions
+
+Call helpers directly from a Jenkinsfile for custom pipelines:
 
 ```groovy
+// Docker operations
 buildDockerImage('localhost:32000/my-app:1.2.3', [ARG1: 'value'])
-prepareKubernetesDeployment('my-app','my-app:1.2.3','8080','10.0.0.50','30080')
 stoppingAndRemovingContainer('my-app')
-runningNewContainer('8080','my-app','localhost:32000/my-app:1.2.3','jenkins-secret-id','my-network',null,[FOO: 'bar'])
+runningNewContainer('8080', 'my-app', 'localhost:32000/my-app:1.2.3', 'jenkins-secret-id', 'my-network', null, [FOO: 'bar'])
 createDockerNetwork('my-network')
-dockerComposeUp('docker-compose.yml','my-app',[FOO: 'bar'])
 removingDanglingImage()
+
+// Docker Compose
+dockerComposeUp('docker-compose.yml', 'my-app', [FOO: 'bar'])
+
+// Kubernetes
+prepareKubernetesDeployment('my-app', 'my-app:1.2.3', '8080', '10.0.0.50', '30080', '1', '/health')
+
+// Git checkout
+checkoutWithScm()
+checkoutWithCredential(10, 'https://github.com/org/repo.git', 'main', 'github-creds')
+
+// Maven
 incrementMavenVersion()
+incrementMavenVersion('custom-git-credentials-id')
 ```
 
-Notes
-- `vars/` functions remain the public API for Jenkinsfiles. Implementation details live under `src/com/nephren` and can be unit tested.
-- The examples assume the shared library is registered in Jenkins as `nephren-shared-lib`. Adjust `@Library(...)` accordingly.
+---
+
+## 📊 Parameter Reference
+
+### Docker Pipelines
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `dockerImage` | String | ✅ | - | Docker image name with tag |
+| `projectName` | String | ✅ | - | Container/service name |
+| `appPort` | String | ❌ | - | Application port to expose |
+| `networkName` | String | ❌ | - | Docker network name |
+| `envFile` | String | ❌ | - | Jenkins credentials ID for env file |
+| `envVariables` | Map/List | ❌ | - | Environment variables |
+| `buildArgs` | Map | ❌ | `[:]` | Docker build arguments |
+| `volumeDriver` | String | ❌ | - | Volume mount specification |
+| `agentLabel` | String | ❌ | `'any'` | Jenkins agent label |
+
+### Kubernetes Pipeline
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `dockerImage` | String | ✅ | - | Docker image name with tag |
+| `projectName` | String | ✅ | - | Deployment/service name |
+| `appPort` | String | ❌ | - | Container port |
+| `kubeNodePort` | String | ❌ | - | NodePort for service |
+| `externalEndpointsIp` | String | ❌ | - | MetalLB/LoadBalancer IP |
+| `replicaCount` | String | ❌ | `'1'` | Number of replicas |
+| `healthCheckPath` | String | ❌ | `''` | Readiness/liveness probe path |
+| `buildArgs` | Map | ❌ | `[:]` | Docker build arguments |
+| `kubectlPath` | String | ❌ | `'/snap/bin/microk8s kubectl'` | Path to kubectl binary |
+
+---
+
+## 📝 Notes
+
+- `vars/` functions are the public API for Jenkinsfiles
+- Implementation details in `src/com/nephren/` can be unit tested
+- Examples assume the library is registered as `nephren-shared-lib` — adjust `@Library(...)` accordingly
+- All pipelines include workspace cleanup in the `post.always` block
+
+---
+
+## 📄 License
+
+MIT License - Feel free to use and modify as needed.
 

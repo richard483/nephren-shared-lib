@@ -19,8 +19,23 @@ def call(body) {
     def BRANCH = gitConfig.get('branch', 'main')
     def CREDENTIALS_ID = gitConfig.get('credentialsId', null)
 
+    // Input validation
+    if (!DOCKER_IMAGE?.trim()) {
+        error "Required parameter 'dockerImage' is missing or empty"
+    }
+    if (!CONTAINER_NAME?.trim()) {
+        error "Required parameter 'projectName' is missing or empty"
+    }
+
     pipeline {
         agent { label AGENT_LABEL }
+        options {
+            buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5', fileSizeLimit: '10MB'))
+            timeout(time: 30, unit: 'MINUTES')
+            timestamps()
+            skipDefaultCheckout()
+            disableConcurrentBuilds()
+        }
         stages {
             stage('Checkout Code') {
                 steps {
@@ -54,6 +69,9 @@ def call(body) {
             }
             failure {
                 echo 'Pipeline failed.'
+            }
+            always {
+                cleanWs()
             }
         }
     }
