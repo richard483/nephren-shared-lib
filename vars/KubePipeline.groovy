@@ -24,7 +24,7 @@ def call(body) {
     pipeline {
         agent any
         options {
-            buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5', fileSizeLimit: '10MB'))
+            buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5'))
             timeout(time: 45, unit: 'MINUTES')
             timestamps()
             skipDefaultCheckout()
