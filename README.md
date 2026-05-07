@@ -62,7 +62,7 @@ Build and deploy with explicit Git checkout configuration.
 ScriptDockerPipeline {
   dockerImage   = 'my-org/my-app:latest'       // required
   projectName   = 'my-app'                     // required (container/service name)
-  appPort       = '8080'                       // optional
+  appPort       = '8080'                       // optional, or '3001:80'
   networkName   = 'my-network'                 // optional
   envFile       = 'jenkins-secret-id'          // optional (credentialsId of a secret file)
   envVariables  = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
@@ -109,7 +109,7 @@ Build and run using Jenkins SCM configuration.
 DockerPipeline {
   dockerImage   = 'my-org/my-app:latest'       // required
   projectName   = 'my-app'                     // required (container/service name)
-  appPort       = '8080'                       // optional
+  appPort       = '8080'                       // optional, or '3001:80'
   networkName   = 'my-network'                 // optional
   envFile       = 'jenkins-secret-id'          // optional (credentialsId of a secret file)
   envVariables  = [FOO: 'bar', BAZ: 'qux']     // optional map or list of KEY=VALUE strings
@@ -208,7 +208,7 @@ incrementMavenVersion('custom-git-credentials-id')
 |-----------|------|----------|---------|-------------|
 | `dockerImage` | String | ✅ | - | Docker image name with tag |
 | `projectName` | String | ✅ | - | Container/service name |
-| `appPort` | String | ❌ | - | Application port to expose |
+| `appPort` | String | ❌ | - | Application port to expose. A single port maps to itself, for example `3001` becomes `3001:3001`; `hostPort:containerPort` mappings such as `3001:80` are preserved. |
 | `networkName` | String | ❌ | - | Docker network name |
 | `envFile` | String | ❌ | - | Jenkins credentials ID for env file |
 | `envVariables` | Map/List | ❌ | - | Environment variables |

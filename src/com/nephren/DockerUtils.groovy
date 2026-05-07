@@ -51,8 +51,8 @@ class DockerUtils implements Serializable {
             runCommand += " -v ${volumeDriver}"
         }
 
-        if (appPort != null && !appPort.isEmpty()) {
-            runCommand += " -p 0.0.0.0:${appPort}:${appPort}"
+        if (appPort != null && !appPort.trim().isEmpty()) {
+            runCommand += " -p 0.0.0.0:${formatPortMapping(appPort)}"
         }
 
         if (envFile != null && !envFile.isEmpty()) {
@@ -83,6 +83,16 @@ class DockerUtils implements Serializable {
         runCommand += " --restart unless-stopped --name ${containerName} ${dockerImage}"
 
         script.sh runCommand
+    }
+
+    private String formatPortMapping(String appPort) {
+        def port = appPort.trim()
+
+        if (port.contains(':')) {
+            return port
+        }
+
+        return "${port}:${port}"
     }
 
     def stopAndRemove(String containerName) {
